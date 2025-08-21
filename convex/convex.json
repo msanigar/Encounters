@@ -1,0 +1,20 @@
+{
+  "project": {
+    "name": "encounters-poc"
+  },
+  "team": {
+    "name": "encounters-poc"
+  },
+  "prodUrl": "https://encounters-poc.convex.cloud",
+  "functions": {
+    "codegen": {
+      "enabled": true
+    }
+  },
+  "authInfo": [
+    {
+      "domain": "localhost:3000",
+      "applicationID": "convex"
+    }
+  ]
+}

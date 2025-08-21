@@ -1,0 +1,174 @@
+   ▲ Next.js 14.0.4
+   - Local:        http://localhost:3000
+   - Environments: .env.local
+
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'appDir' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ✓ Ready in 1637ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1213ms (514 modules)
+ ✓ Compiled in 154ms (258 modules)
+ ○ Compiling /provider/dashboard ...
+ ⨯ ./components/LeftRail/EncounterList.tsx
+Error: 
+  [31mx[0m Unexpected token `div`. Expected jsx identifier
+    ,-[[36;1;4m/Users/mylessanigar/Documents/Github/Encounters/components/LeftRail/EncounterList.tsx[0m:32:1]
+ [2m32[0m |   }
+ [2m33[0m | 
+ [2m34[0m |   return (
+ [2m35[0m |     <div className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col h-screen">
+    : [31;1m     ^^^[0m
+ [2m36[0m |       {/* Header - Fixed */}
+ [2m37[0m |       <div className="p-4 border-b border-gray-200 flex-shrink-0">
+ [2m38[0m |         {/* Debug Info (Provider) */}
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/LeftRail/EncounterList.tsx
+./app/provider/dashboard/page.tsx
+ ⨯ ./components/LeftRail/EncounterList.tsx
+Error: 
+  [31mx[0m Unexpected token `div`. Expected jsx identifier
+    ,-[[36;1;4m/Users/mylessanigar/Documents/Github/Encounters/components/LeftRail/EncounterList.tsx[0m:32:1]
+ [2m32[0m |   }
+ [2m33[0m | 
+ [2m34[0m |   return (
+ [2m35[0m |     <div className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col h-screen">
+    : [31;1m     ^^^[0m
+ [2m36[0m |       {/* Header - Fixed */}
+ [2m37[0m |       <div className="p-4 border-b border-gray-200 flex-shrink-0">
+ [2m38[0m |         {/* Debug Info (Provider) */}
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/LeftRail/EncounterList.tsx
+./app/provider/dashboard/page.tsx
+ ⨯ ./components/LeftRail/EncounterList.tsx
+Error: 
+  [31mx[0m Unexpected token `div`. Expected jsx identifier
+    ,-[[36;1;4m/Users/mylessanigar/Documents/Github/Encounters/components/LeftRail/EncounterList.tsx[0m:32:1]
+ [2m32[0m |   }
+ [2m33[0m | 
+ [2m34[0m |   return (
+ [2m35[0m |     <div className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col h-screen">
+    : [31;1m     ^^^[0m
+ [2m36[0m |       {/* Header - Fixed */}
+ [2m37[0m |       <div className="p-4 border-b border-gray-200 flex-shrink-0">
+ [2m38[0m |         {/* Debug Info (Provider) */}
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/LeftRail/EncounterList.tsx
+./app/provider/dashboard/page.tsx
+ ⨯ ./components/LeftRail/EncounterList.tsx
+Error: 
+  [31mx[0m Unexpected token `div`. Expected jsx identifier
+    ,-[[36;1;4m/Users/mylessanigar/Documents/Github/Encounters/components/LeftRail/EncounterList.tsx[0m:32:1]
+ [2m32[0m |   }
+ [2m33[0m | 
+ [2m34[0m |   return (
+ [2m35[0m |     <div className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col h-screen">
+    : [31;1m     ^^^[0m
+ [2m36[0m |       {/* Header - Fixed */}
+ [2m37[0m |       <div className="p-4 border-b border-gray-200 flex-shrink-0">
+ [2m38[0m |         {/* Debug Info (Provider) */}
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/LeftRail/EncounterList.tsx
+./app/provider/dashboard/page.tsx
+ ⨯ ./components/LeftRail/EncounterList.tsx:8:0
+Module not found: Can't resolve '@/components/ui/use-toast'
+[0m [90m  6 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m  7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m[31m[1m>[22m[39m[90m  8 |[39m [36mimport[39m { useToast } [36mfrom[39m [32m'@/components/ui/use-toast'[39m[0m
+[0m [90m  9 |[39m [36mimport[39m { getStatusColor[33m,[39m getStatusText[33m,[39m formatDate } [36mfrom[39m [32m'@/lib/utils'[39m[0m
+[0m [90m 10 |[39m [36mimport[39m { [33mVideo[39m[33m,[39m [33mClock[39m[33m,[39m [33mUser[39m[33m,[39m [33mPhone[39m[33m,[39m [33mCopy[39m[33m,[39m [33mLink[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+[0m [90m 11 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./app/provider/dashboard/page.tsx
+ ⨯ ./components/LeftRail/EncounterList.tsx:8:0
+Module not found: Can't resolve '@/components/ui/use-toast'
+[0m [90m  6 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m  7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m[31m[1m>[22m[39m[90m  8 |[39m [36mimport[39m { useToast } [36mfrom[39m [32m'@/components/ui/use-toast'[39m[0m
+[0m [90m  9 |[39m [36mimport[39m { getStatusColor[33m,[39m getStatusText[33m,[39m formatDate } [36mfrom[39m [32m'@/lib/utils'[39m[0m
+[0m [90m 10 |[39m [36mimport[39m { [33mVideo[39m[33m,[39m [33mClock[39m[33m,[39m [33mUser[39m[33m,[39m [33mPhone[39m[33m,[39m [33mCopy[39m[33m,[39m [33mLink[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+[0m [90m 11 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./app/provider/dashboard/page.tsx
+ ⨯ ./components/LeftRail/EncounterList.tsx:8:0
+Module not found: Can't resolve '@/components/ui/use-toast'
+[0m [90m  6 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m  7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m[31m[1m>[22m[39m[90m  8 |[39m [36mimport[39m { useToast } [36mfrom[39m [32m'@/components/ui/use-toast'[39m[0m
+[0m [90m  9 |[39m [36mimport[39m { getStatusColor[33m,[39m getStatusText[33m,[39m formatDate } [36mfrom[39m [32m'@/lib/utils'[39m[0m
+[0m [90m 10 |[39m [36mimport[39m { [33mVideo[39m[33m,[39m [33mClock[39m[33m,[39m [33mUser[39m[33m,[39m [33mPhone[39m[33m,[39m [33mCopy[39m[33m,[39m [33mLink[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+[0m [90m 11 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./app/provider/dashboard/page.tsx
+ ⨯ ./components/LeftRail/EncounterList.tsx:8:0
+Module not found: Can't resolve '@/components/ui/use-toast'
+[0m [90m  6 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m  7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m[31m[1m>[22m[39m[90m  8 |[39m [36mimport[39m { useToast } [36mfrom[39m [32m'@/components/ui/use-toast'[39m[0m
+[0m [90m  9 |[39m [36mimport[39m { getStatusColor[33m,[39m getStatusText[33m,[39m formatDate } [36mfrom[39m [32m'@/lib/utils'[39m[0m
+[0m [90m 10 |[39m [36mimport[39m { [33mVideo[39m[33m,[39m [33mClock[39m[33m,[39m [33mUser[39m[33m,[39m [33mPhone[39m[33m,[39m [33mCopy[39m[33m,[39m [33mLink[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+[0m [90m 11 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./app/provider/dashboard/page.tsx
+ ⨯ ./components/LeftRail/EncounterList.tsx:8:0
+Module not found: Can't resolve '@/components/ui/use-toast'
+[0m [90m  6 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m  7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m[31m[1m>[22m[39m[90m  8 |[39m [36mimport[39m { useToast } [36mfrom[39m [32m'@/components/ui/use-toast'[39m[0m
+[0m [90m  9 |[39m [36mimport[39m { getStatusColor[33m,[39m getStatusText[33m,[39m formatDate } [36mfrom[39m [32m'@/lib/utils'[39m[0m
+[0m [90m 10 |[39m [36mimport[39m { [33mVideo[39m[33m,[39m [33mClock[39m[33m,[39m [33mUser[39m[33m,[39m [33mPhone[39m[33m,[39m [33mCopy[39m[33m,[39m [33mLink[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+[0m [90m 11 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./app/provider/dashboard/page.tsx
+ ✓ Compiled /not-found in 415ms (1010 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 292ms (1024 modules)
+ ✓ Compiled in 397ms (1014 modules)
+ ✓ Compiled in 287ms (1014 modules)
+ ✓ Compiled /[providerRoom]/[oit] in 144ms (460 modules)
+ ✓ Compiled /not-found in 225ms (1010 modules)
+ ○ Compiling /patient/[encounterId]/[participantId] ...
+ ✓ Compiled /patient/[encounterId]/[participantId] in 562ms (1036 modules)
+ ✓ Compiled in 831ms (1031 modules)
+ ✓ Compiled in 673ms (1045 modules)
+ ✓ Compiled in 744ms (1045 modules)
+ ✓ Compiled in 739ms (1031 modules)
+ ✓ Compiled in 937ms (1045 modules)
+ ○ Compiling /not-found ...
+ ✓ Compiled /not-found in 673ms (1036 modules)
+[?25h
