@@ -90,7 +90,7 @@ export function ChatPanel({ encounterId, participantId }: ChatPanelProps) {
       {/* Chat Messages - Reduced padding */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {events && events.length > 0 ? (
-          events.slice().reverse().map((event) => (
+          events.slice().reverse().map((event: any) => (
             <div
               key={event._id}
               className={`flex ${event.payload.participantId === participantId ? 'justify-end' : 'justify-start'}`}

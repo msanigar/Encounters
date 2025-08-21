@@ -98,7 +98,7 @@ export function Journal({ encounterId }: JournalProps) {
 
       {/* Events list */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {events?.slice().reverse().map((event) => (
+        {events?.slice().reverse().map((event: any) => (
           <div key={event._id} className="flex space-x-3">
             <Avatar className="w-8 h-8">
               <AvatarFallback className="text-xs">

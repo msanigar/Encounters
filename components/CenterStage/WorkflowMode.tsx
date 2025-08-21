@@ -98,7 +98,7 @@ export function WorkflowMode({ encounterId, onJoinCall }: WorkflowModeProps) {
           <CardContent>
             <div className="space-y-3">
               {encounter?.invites && encounter.invites.length > 0 ? (
-                encounter.invites.map((invite) => (
+                encounter.invites.map((invite: any) => (
                   <div key={invite._id} className="flex items-center justify-between p-3 border rounded-lg bg-blue-50">
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-900">Patient Check-in Link</h3>

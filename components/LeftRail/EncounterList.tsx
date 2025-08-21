@@ -45,7 +45,7 @@ export function EncounterList({ providerId, onEncounterSelect, activeEncounterId
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto p-4 relative">
         <div className="space-y-3">
-        {encounters.map((encounter) => (
+        {encounters.map((encounter: any) => (
           <Card
             key={encounter._id}
             className={`cursor-pointer transition-all hover:shadow-md ${

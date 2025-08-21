@@ -24,19 +24,19 @@ export default function ProviderMainDashboard() {
     providerId: 'provider-demo-001' 
   })
 
-  const todayEncounters = encounters?.filter(e => {
+  const todayEncounters = encounters?.filter((e: any) => {
     const scheduled = new Date(e.scheduledAt || 0)
     const today = new Date()
     return scheduled.toDateString() === today.toDateString()
   }) || []
 
-  const upcomingEncounters = encounters?.filter(e => {
+  const upcomingEncounters = encounters?.filter((e: any) => {
     const scheduled = new Date(e.scheduledAt || 0)
     const today = new Date()
     return scheduled > today && scheduled.toDateString() !== today.toDateString()
   }) || []
 
-  const pastEncounters = encounters?.filter(e => {
+  const pastEncounters = encounters?.filter((e: any) => {
     const scheduled = new Date(e.scheduledAt || 0)
     const today = new Date()
     return scheduled < today
@@ -95,7 +95,7 @@ export default function ProviderMainDashboard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Completed</span>
-                  <Badge variant="default">{pastEncounters.filter(e => {
+                  <Badge variant="default">{pastEncounters.filter((e: any) => {
                     const scheduled = new Date(e.scheduledAt || 0)
                     const today = new Date()
                     return scheduled.toDateString() === today.toDateString()
@@ -103,7 +103,7 @@ export default function ProviderMainDashboard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Waiting</span>
-                  <Badge variant="outline">{todayEncounters.filter(e => e.status === 'scheduled').length}</Badge>
+                  <Badge variant="outline">{todayEncounters.filter((e: any) => e.status === 'scheduled').length}</Badge>
                 </div>
               </CardContent>
             </Card>
@@ -170,7 +170,7 @@ export default function ProviderMainDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {getEncountersForTab().map((encounter) => (
+                    {getEncountersForTab().map((encounter: any) => (
                       <div
                         key={encounter._id}
                         className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"

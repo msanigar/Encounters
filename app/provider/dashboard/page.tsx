@@ -7,10 +7,10 @@ import { MediaCanvas } from '@/components/CenterStage/MediaCanvas'
 import { WorkflowMode } from '@/components/CenterStage/WorkflowMode'
 import { ChatPanel } from '@/components/ChatPanel/ChatPanel'
 import { MediaControls } from '@/components/MediaControls/MediaControls'
-import { useQuery } from 'convex/react'
+import { useQuery, useMutation } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { Calendar, User, FileText, Settings } from 'lucide-react'
 import { livekitClient } from '@/lib/livekitClient'
@@ -20,8 +20,11 @@ export default function ProviderDashboard() {
   const [isInMedia, setIsInMedia] = useState(false)
   const [providerId, setProviderId] = useState<string | null>(null)
   const [debugData, setDebugData] = useState<any>(null)
+  const [isResetting, setIsResetting] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
+  
+  const resetOits = useMutation(api.mutations.resetOits.resetOits)
 
   const activeEncounter = useQuery(api.queries.encounters.getWithDetails, 
     activeEncounterId ? { encounterId: activeEncounterId as any } : 'skip'
@@ -93,6 +96,24 @@ export default function ProviderDashboard() {
     setActiveEncounterId(null)
     setIsInMedia(false)
     updateUrl(null, false)
+  }
+
+  const handleResetOits = async () => {
+    if (isResetting) return
+    
+    setIsResetting(true)
+    try {
+      const result = await resetOits()
+      console.log('✅ OITs reset successfully:', result)
+      
+      // Refresh the page to show new encounters
+      window.location.reload()
+    } catch (error) {
+      console.error('❌ Failed to reset OITs:', error)
+      alert('Failed to reset OITs. Please try again.')
+    } finally {
+      setIsResetting(false)
+    }
   }
 
   if (!providerId) {
@@ -233,6 +254,15 @@ export default function ProviderDashboard() {
                         <Button className="w-full justify-start" variant="outline">
                           <Settings className="w-4 h-4 mr-2" />
                           Practice Settings
+                        </Button>
+                        <Button 
+                          className="w-full justify-start" 
+                          variant="outline"
+                          onClick={handleResetOits}
+                          disabled={isResetting}
+                        >
+                          <RefreshCw className={`w-4 h-4 mr-2 ${isResetting ? 'animate-spin' : ''}`} />
+                          {isResetting ? 'Resetting...' : 'Reset OITs'}
                         </Button>
                       </div>
                     </div>

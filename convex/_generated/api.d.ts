@@ -22,6 +22,7 @@ import type * as mutations_encounter from "../mutations/encounter.js";
 import type * as mutations_handoff from "../mutations/handoff.js";
 import type * as mutations_invites from "../mutations/invites.js";
 import type * as mutations_provider from "../mutations/provider.js";
+import type * as mutations_resetOits from "../mutations/resetOits.js";
 import type * as mutations_tokens from "../mutations/tokens.js";
 import type * as mutations_workflow from "../mutations/workflow.js";
 import type * as queries_encounters from "../queries/encounters.js";
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   "mutations/handoff": typeof mutations_handoff;
   "mutations/invites": typeof mutations_invites;
   "mutations/provider": typeof mutations_provider;
+  "mutations/resetOits": typeof mutations_resetOits;
   "mutations/tokens": typeof mutations_tokens;
   "mutations/workflow": typeof mutations_workflow;
   "queries/encounters": typeof queries_encounters;
