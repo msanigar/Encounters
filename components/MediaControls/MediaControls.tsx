@@ -38,11 +38,21 @@ export function MediaControls({ onTrackToggle, onDeviceChange }: MediaControlsPr
   useEffect(() => {
     const loadDevices = async () => {
       try {
+        // First, request permissions to access media devices
+        try {
+          await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+        } catch (permissionError) {
+          console.log('Permission denied or not granted yet:', permissionError)
+          // Continue anyway - some devices might still be available
+        }
+        
         const devices = await navigator.mediaDevices.enumerateDevices()
         
         const audioInputs = devices.filter(device => device.kind === 'audioinput')
         const videoInputs = devices.filter(device => device.kind === 'videoinput')
         const audioOutputs = devices.filter(device => device.kind === 'audiooutput')
+        
+        console.log('Available devices:', { audioInputs: audioInputs.length, videoInputs: videoInputs.length, audioOutputs: audioOutputs.length })
         
         setDevices({
           audioInputs,
@@ -247,21 +257,28 @@ export function MediaControls({ onTrackToggle, onDeviceChange }: MediaControlsPr
               variant={isMicEnabled ? "default" : "secondary"}
               onClick={toggleMic}
               className="w-full sm:w-8 h-8 p-0"
+              disabled={devices.audioInputs.length === 0}
             >
               {isMicEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
             </Button>
             <Select value={selectedMicId || ''} onValueChange={(value) => handleDeviceChange('mic', value)}>
               <SelectTrigger className="flex-1 h-8 text-xs">
-                <SelectValue placeholder="Microphone" />
+                <SelectValue placeholder={devices.audioInputs.length === 0 ? "No microphones" : "Microphone"} />
               </SelectTrigger>
               <SelectContent>
-                {devices.audioInputs
-                  .filter((device) => device.deviceId && device.deviceId.trim() !== '')
-                  .map((device) => (
-                    <SelectItem key={device.deviceId} value={device.deviceId}>
-                      {device.label || `Mic ${device.deviceId.slice(0, 8)}`}
-                    </SelectItem>
-                  ))}
+                {devices.audioInputs.length === 0 ? (
+                  <SelectItem value="no-devices" disabled>
+                    No microphones available
+                  </SelectItem>
+                ) : (
+                  devices.audioInputs
+                    .filter((device) => device.deviceId && device.deviceId.trim() !== '')
+                    .map((device) => (
+                      <SelectItem key={device.deviceId} value={device.deviceId}>
+                        {device.label || `Mic ${device.deviceId.slice(0, 8)}`}
+                      </SelectItem>
+                    ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -273,21 +290,28 @@ export function MediaControls({ onTrackToggle, onDeviceChange }: MediaControlsPr
               variant={isVideoEnabled ? "default" : "secondary"}
               onClick={toggleVideo}
               className="w-full sm:w-8 h-8 p-0"
+              disabled={devices.videoInputs.length === 0}
             >
               {isVideoEnabled ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
             </Button>
             <Select value={selectedCamId || ''} onValueChange={(value) => handleDeviceChange('cam', value)}>
               <SelectTrigger className="flex-1 h-8 text-xs">
-                <SelectValue placeholder="Camera" />
+                <SelectValue placeholder={devices.videoInputs.length === 0 ? "No cameras" : "Camera"} />
               </SelectTrigger>
               <SelectContent>
-                {devices.videoInputs
-                  .filter((device) => device.deviceId && device.deviceId.trim() !== '')
-                  .map((device) => (
-                    <SelectItem key={device.deviceId} value={device.deviceId}>
-                      {device.label || `Cam ${device.deviceId.slice(0, 8)}`}
-                    </SelectItem>
-                  ))}
+                {devices.videoInputs.length === 0 ? (
+                  <SelectItem value="no-devices" disabled>
+                    No cameras available
+                  </SelectItem>
+                ) : (
+                  devices.videoInputs
+                    .filter((device) => device.deviceId && device.deviceId.trim() !== '')
+                    .map((device) => (
+                      <SelectItem key={device.deviceId} value={device.deviceId}>
+                        {device.label || `Cam ${device.deviceId.slice(0, 8)}`}
+                      </SelectItem>
+                    ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -297,16 +321,22 @@ export function MediaControls({ onTrackToggle, onDeviceChange }: MediaControlsPr
             <Volume2 className="w-4 h-4 text-gray-600" />
             <Select value={selectedSpeakerId || ''} onValueChange={(value) => handleDeviceChange('speaker', value)}>
               <SelectTrigger className="flex-1 h-8 text-xs">
-                <SelectValue placeholder="Speaker" />
+                <SelectValue placeholder={devices.audioOutputs.length === 0 ? "No speakers" : "Speaker"} />
               </SelectTrigger>
               <SelectContent>
-                {devices.audioOutputs
-                  .filter((device) => device.deviceId && device.deviceId.trim() !== '')
-                  .map((device) => (
-                    <SelectItem key={device.deviceId} value={device.deviceId}>
-                      {device.label || `Speaker ${device.deviceId.slice(0, 8)}`}
-                    </SelectItem>
-                  ))}
+                {devices.audioOutputs.length === 0 ? (
+                  <SelectItem value="no-devices" disabled>
+                    No speakers available
+                  </SelectItem>
+                ) : (
+                  devices.audioOutputs
+                    .filter((device) => device.deviceId && device.deviceId.trim() !== '')
+                    .map((device) => (
+                      <SelectItem key={device.deviceId} value={device.deviceId}>
+                        {device.label || `Speaker ${device.deviceId.slice(0, 8)}`}
+                      </SelectItem>
+                    ))
+                )}
               </SelectContent>
             </Select>
           </div>
