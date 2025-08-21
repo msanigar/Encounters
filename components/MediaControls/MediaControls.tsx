@@ -255,11 +255,13 @@ export function MediaControls({ onTrackToggle, onDeviceChange }: MediaControlsPr
                 <SelectValue placeholder="Microphone" />
               </SelectTrigger>
               <SelectContent>
-                {devices.audioInputs.map((device) => (
-                  <SelectItem key={device.deviceId} value={device.deviceId}>
-                    {device.label || `Mic ${device.deviceId.slice(0, 8)}`}
-                  </SelectItem>
-                ))}
+                {devices.audioInputs
+                  .filter((device) => device.deviceId && device.deviceId.trim() !== '')
+                  .map((device) => (
+                    <SelectItem key={device.deviceId} value={device.deviceId}>
+                      {device.label || `Mic ${device.deviceId.slice(0, 8)}`}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -279,11 +281,13 @@ export function MediaControls({ onTrackToggle, onDeviceChange }: MediaControlsPr
                 <SelectValue placeholder="Camera" />
               </SelectTrigger>
               <SelectContent>
-                {devices.videoInputs.map((device) => (
-                  <SelectItem key={device.deviceId} value={device.deviceId}>
-                    {device.label || `Cam ${device.deviceId.slice(0, 8)}`}
-                  </SelectItem>
-                ))}
+                {devices.videoInputs
+                  .filter((device) => device.deviceId && device.deviceId.trim() !== '')
+                  .map((device) => (
+                    <SelectItem key={device.deviceId} value={device.deviceId}>
+                      {device.label || `Cam ${device.deviceId.slice(0, 8)}`}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -296,11 +300,13 @@ export function MediaControls({ onTrackToggle, onDeviceChange }: MediaControlsPr
                 <SelectValue placeholder="Speaker" />
               </SelectTrigger>
               <SelectContent>
-                {devices.audioOutputs.map((device) => (
-                  <SelectItem key={device.deviceId} value={device.deviceId}>
-                    {device.label || `Speaker ${device.deviceId.slice(0, 8)}`}
-                  </SelectItem>
-                ))}
+                {devices.audioOutputs
+                  .filter((device) => device.deviceId && device.deviceId.trim() !== '')
+                  .map((device) => (
+                    <SelectItem key={device.deviceId} value={device.deviceId}>
+                      {device.label || `Speaker ${device.deviceId.slice(0, 8)}`}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
