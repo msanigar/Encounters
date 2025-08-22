@@ -36,9 +36,9 @@ export function ScheduleEncounter({
   className = '' 
 }: ScheduleEncounterProps) {
   const [scheduledTime, setScheduledTime] = useState(() => {
-    // Default to 15 minutes from now
+    // Default to next hour with minutes set to 00
     const now = new Date()
-    now.setMinutes(now.getMinutes() + 15)
+    now.setHours(now.getHours() + 1, 0, 0, 0) // Next hour, minutes=00, seconds=00, ms=00
     return now.toISOString().slice(0, 16) // Format for datetime-local input
   })
   const [channel, setChannel] = useState<'email' | 'sms' | 'link'>('email')
