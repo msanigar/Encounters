@@ -60,27 +60,31 @@ export const summary = query({
     let checkInState: 'not-arrived' | 'arrived' | 'in-call' | 'dashboard' = 'not-arrived'
     
     if (encounter) {
+      const hasPatientOnline = patients.some(p => p.presence === 'online')
+      const hasProviderOnline = !!provider && provider.presence === 'online'
+      
       if (encounter.status === 'active') {
-        const hasPatientOnline = patients.some(p => p.presence === 'online')
-        const hasProviderOnline = !!provider && provider.presence === 'online'
-        
         if (hasActiveCall && hasPatientOnline) {
-          // Patient is in an active call
+          // Patient is in an active call (media is active)
           checkInState = 'in-call'
         } else if (hasPatientOnline && !hasProviderOnline) {
           // Patient is online but provider hasn't joined yet
           checkInState = 'arrived'
         } else if (hasPatientOnline && hasProviderOnline && !hasActiveCall) {
-          // Both are online but not in an active call (probably on dashboard)
+          // Both are online but not in an active call (provider on dashboard, patient waiting)
           checkInState = 'dashboard'
         } else if (hasPatientOnline) {
           // Patient is online but no clear call state
           checkInState = 'dashboard'
         }
       } else if (encounter.status === 'scheduled') {
-        const hasPatientOnline = patients.some(p => p.presence === 'online')
         if (hasPatientOnline) {
           checkInState = 'arrived'
+        }
+      } else if (encounter.status === 'paused') {
+        // When encounter is paused (provider left media), patient should show as 'dashboard'
+        if (hasPatientOnline) {
+          checkInState = 'dashboard'
         }
       }
     }
