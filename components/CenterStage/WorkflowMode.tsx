@@ -17,21 +17,26 @@ interface WorkflowModeProps {
 
 export function WorkflowMode({ encounterId, onJoinCall }: WorkflowModeProps) {
   const encounter = useQuery(api.queries.encounters.getWithDetails, { encounterId: encounterId as any })
-  const workflow = useQuery(api.queries.workflows.get, { encounterId: encounterId as any })
-  const assignWorkflow = useMutation(api.mutations.workflow.assign)
+  const formAssignments = useQuery(api.queries.forms.getAssignments, { encounterId: encounterId as any })
+  const assignForm = useMutation(api.mutations.forms.assignForm)
   const { toast, showToast, hideToast } = useToast()
 
   const handleAssignForm = async (formId: string) => {
     try {
-      await assignWorkflow({ encounterId: encounterId as any, formIdStub: formId })
+      await assignForm({ encounterId: encounterId as any, formId })
+      showToast('Form assigned successfully!')
     } catch (error) {
-      console.error('Failed to assign workflow:', error)
+      console.error('Failed to assign form:', error)
+      showToast('Failed to assign form. Please try again.')
     }
   }
 
   const availableForms = [
     { id: 'intake', title: 'Patient Intake Form', description: 'Basic patient information and medical history' },
   ]
+
+  // Check if intake form is assigned
+  const intakeAssignment = formAssignments?.find(assignment => assignment.formId === 'intake')
 
   return (
     <div className="flex-1 bg-gray-50 p-6">
@@ -146,30 +151,46 @@ export function WorkflowMode({ encounterId, onJoinCall }: WorkflowModeProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {availableForms.map((form: any) => (
-                <div
-                  key={form.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
-                >
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{form.title}</h3>
-                    <p className="text-sm text-gray-600">{form.description}</p>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleAssignForm(form.id)}
+              {availableForms.map((form: any) => {
+                const isAssigned = formAssignments?.some(assignment => assignment.formId === form.id)
+                const assignment = formAssignments?.find(assignment => assignment.formId === form.id)
+                
+                return (
+                  <div
+                    key={form.id}
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
                   >
-                    Assign
-                  </Button>
-                </div>
-              ))}
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900">{form.title}</h3>
+                      <p className="text-sm text-gray-600">{form.description}</p>
+                      {isAssigned && (
+                        <div className="mt-2">
+                          <Badge 
+                            variant={assignment?.status === 'complete' ? 'default' : 'secondary'}
+                            className="text-xs"
+                          >
+                            {assignment?.status === 'complete' ? 'Completed' : 'Assigned'}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={isAssigned ? "outline" : "default"}
+                      disabled={isAssigned}
+                      onClick={() => handleAssignForm(form.id)}
+                    >
+                      {isAssigned ? 'Assigned' : 'Assign'}
+                    </Button>
+                  </div>
+                )
+              })}
             </div>
           </CardContent>
         </Card>
 
-        {/* Current Workflow */}
-        {workflow && workflow.state !== 'none' && (
+        {/* Current Workflow - Updated to use form assignments */}
+        {intakeAssignment && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -181,16 +202,16 @@ export function WorkflowMode({ encounterId, onJoinCall }: WorkflowModeProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-gray-900">
-                    {workflow.items[workflow.items.length - 1]?.formId || 'Form'} Assigned
+                    Patient Intake Form Assigned
                   </p>
                   <p className="text-sm text-gray-600">
-                    Status: {workflow.state}
+                    Status: {intakeAssignment.status}
                   </p>
                 </div>
                 <Badge
-                  variant={workflow.state === 'submitted' ? 'default' : 'secondary'}
+                  variant={intakeAssignment.status === 'complete' ? 'default' : 'secondary'}
                 >
-                  {workflow.state === 'submitted' ? 'Completed' : 'In Progress'}
+                  {intakeAssignment.status === 'complete' ? 'Completed' : 'In Progress'}
                 </Badge>
               </div>
             </CardContent>
@@ -199,8 +220,8 @@ export function WorkflowMode({ encounterId, onJoinCall }: WorkflowModeProps) {
 
         {/* Quick Actions */}
         <div className="flex justify-center space-x-4">
-          {/* Show Join Call button for providers OR when there's an active workflow */}
-          {(workflow && workflow.state !== 'none') || encounter?.providerId ? (
+          {/* Show Join Call button for providers OR when there's an assigned form */}
+          {intakeAssignment || encounter?.providerId ? (
             <Button 
               size="lg" 
               className="bg-primary hover:bg-primary/90"

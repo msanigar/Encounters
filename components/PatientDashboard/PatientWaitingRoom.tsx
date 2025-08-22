@@ -57,7 +57,7 @@ export function PatientWaitingRoom({
   // Only show Intake form if it's assigned
   const assignedForms = formAssignments?.filter(assignment => assignment.formId === 'intake') || []
   
-  // Intake form definition
+  // Intake form definition - Short and concise version
   const intakeForm = {
     id: 'intake',
     title: 'Patient Intake Form',
@@ -65,13 +65,8 @@ export function PatientWaitingRoom({
     fields: [
       { id: 'fullName', label: 'Full Name', type: 'text', required: true },
       { id: 'dateOfBirth', label: 'Date of Birth', type: 'date', required: true },
-      { id: 'phoneNumber', label: 'Phone Number', type: 'text', required: true },
-      { id: 'emergencyContact', label: 'Emergency Contact', type: 'text' },
-      { id: 'allergies', label: 'Allergies', type: 'textarea' },
-      { id: 'currentMedications', label: 'Current Medications', type: 'textarea' },
-      { id: 'medicalHistory', label: 'Medical History', type: 'textarea' },
       { id: 'reasonForVisit', label: 'Reason for Visit', type: 'textarea', required: true },
-      { id: 'symptoms', label: 'Current Symptoms', type: 'textarea' },
+      { id: 'consentTreatment', label: 'I consent to receive treatment from this healthcare provider', type: 'checkbox', required: true },
       { id: 'shareWithProvider', label: 'I consent to share this information with my healthcare provider', type: 'checkbox', required: true }
     ]
   }

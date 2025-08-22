@@ -7,7 +7,7 @@ import { PatientWaitingRoom } from './PatientWaitingRoom'
 import { PatientMediaCanvas } from './PatientMediaCanvas'
 import { ChatPanel } from '@/components/ChatPanel/ChatPanel'
 import { MediaControls } from '@/components/MediaControls/MediaControls'
-import { IntakeForm } from '@/components/IntakeForm/IntakeForm'
+
 import { DebugPanel } from '@/components/LeftRail/DebugPanel'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -39,11 +39,7 @@ export function PatientDashboard({
   const [isInCall, setIsInCall] = useState(false)
   const [debugData, setDebugData] = useState<any>(null)
   
-  // Query form status
-  const formStatus = useQuery(api.queries.forms.getFormStatus, {
-    encounterId: encounterId as any,
-    formId: 'intake',
-  })
+
   
   const encounter = useQuery(api.queries.encounters.getWithDetails, { encounterId: encounterId as any })
 
@@ -140,7 +136,7 @@ export function PatientDashboard({
             <CardContent className="space-y-3">
               <div>
                 <span className="font-medium text-gray-700">Provider:</span>
-                <span className="ml-2 text-gray-900">Dr. Smith</span>
+                <span className="ml-2 text-gray-900">Dr. Provider</span>
               </div>
               <div>
                 <span className="font-medium text-gray-700">Scheduled:</span>
@@ -183,18 +179,8 @@ export function PatientDashboard({
           )}
         </div>
 
-        {/* Right Panel - Forms + Device Controls + Chat (Stacked on mobile) */}
+        {/* Right Panel - Device Controls + Chat (Stacked on mobile) */}
         <div className="lg:w-80 bg-white lg:border-l border-gray-200 flex flex-col">
-          {/* Intake Form - Show if assigned, not submitted, and not in call */}
-          {!isInCall && formStatus && formStatus.isAssigned && !formStatus.isSubmitted && (
-            <div className="p-4 border-b border-gray-200">
-              <IntakeForm 
-                encounterId={encounterId}
-                patientId={participantId}
-              />
-            </div>
-          )}
-          
           <MediaControls 
             onTrackToggle={(kind, enabled) => {
               livekitClient.toggleTrack(kind, enabled)
