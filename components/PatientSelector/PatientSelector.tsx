@@ -251,16 +251,22 @@ export function PatientSelector({
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">Recent Encounters</h4>
                   <div className="space-y-1">
-                    {patientWithEncounters.encounters.slice(0, 3).map((encounter: any) => (
-                      <div key={encounter._id} className="flex items-center justify-between text-xs">
-                        <span className="text-gray-600">
-                          {formatDate(encounter.scheduledAt || encounter.createdAt)}
-                        </span>
-                        <Badge variant="outline" className="text-xs">
-                          {encounter.status}
-                        </Badge>
-                      </div>
-                    ))}
+                    {patientWithEncounters.encounters.slice(0, 3).map((encounter: any) => {
+                      // Handle different date field possibilities
+                      const encounterDate = encounter.scheduledAt || encounter.createdAt || encounter.linkCreatedAt
+                      const formattedDate = encounterDate ? formatDate(encounterDate) : 'Unknown date'
+                      
+                      return (
+                        <div key={encounter._id} className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600">
+                            {formattedDate}
+                          </span>
+                          <Badge variant="outline" className="text-xs">
+                            {encounter.status || 'unknown'}
+                          </Badge>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}
@@ -276,6 +282,14 @@ export function PatientSelector({
                   onChange={(e) => handleSearch(e.target.value)}
                   className="pl-10"
                 />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                >
+                  {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </Button>
               </div>
 
               {/* Search Results */}
