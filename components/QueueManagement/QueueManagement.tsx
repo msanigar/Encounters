@@ -21,9 +21,10 @@ import {
 interface QueueManagementProps {
   providerId: string
   providerRoom: string
+  onEncounterCreated?: (encounterId: string) => void
 }
 
-export function QueueManagement({ providerId, providerRoom }: QueueManagementProps) {
+export function QueueManagement({ providerId, providerRoom, onEncounterCreated }: QueueManagementProps) {
   const [isConverting, setIsConverting] = useState<string | null>(null)
   const { toast, showToast, hideToast } = useToast()
 
@@ -33,7 +34,11 @@ export function QueueManagement({ providerId, providerRoom }: QueueManagementPro
   const handleStartEncounter = async (visitId: string) => {
     setIsConverting(visitId)
     try {
-      await convertToEncounter({ visitId: visitId as any })
+      const result = await convertToEncounter({ visitId: visitId as any })
+      // Call the callback with the new encounter ID
+      if (onEncounterCreated && result.encounterId) {
+        onEncounterCreated(result.encounterId)
+      }
     } catch (error) {
       console.error('Failed to convert visit to encounter:', error)
     } finally {

@@ -93,7 +93,7 @@ export const update = mutation({
     if (args.emailOrPhone && args.emailOrPhone !== patient.emailOrPhone) {
       const existingPatient = await ctx.db
         .query('patients')
-        .withIndex('by_contact', (q) => q.eq('emailOrPhone', args.emailOrPhone))
+        .withIndex('by_contact', (q) => q.eq('emailOrPhone', args.emailOrPhone!))
         .first()
 
       if (existingPatient && existingPatient._id !== args.patientId) {

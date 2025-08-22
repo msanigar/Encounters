@@ -251,6 +251,7 @@ export default function ProviderDashboard() {
                     {/* Queue Management */}
                     <QueueManagement
                       providerId={providerId || 'provider-demo-001'}
+                      providerRoom="demo-room"
                       onEncounterCreated={(encounterId) => {
                         setActiveEncounterId(encounterId)
                         setIsInMedia(false)
