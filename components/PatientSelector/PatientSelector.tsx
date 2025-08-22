@@ -19,7 +19,7 @@ import {
   Edit,
   Save
 } from 'lucide-react'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatTime } from '@/lib/utils'
 
 interface PatientSelectorProps {
   onPatientSelect: (patientId: string, patient: any) => void
@@ -161,6 +161,23 @@ export function PatientSelector({
     setIsEditing(false)
   }
 
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'scheduled':
+        return 'Scheduled'
+      case 'completed':
+        return 'Completed'
+      case 'cancelled':
+        return 'Cancelled'
+      case 'no-show':
+        return 'No Show'
+      case 'rescheduled':
+        return 'Rescheduled'
+      default:
+        return 'Unknown'
+    }
+  }
+
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Search/Select Patient */}
@@ -254,15 +271,15 @@ export function PatientSelector({
                     {patientWithEncounters.encounters.slice(0, 3).map((encounter: any) => {
                       // Handle different date field possibilities
                       const encounterDate = encounter.scheduledAt || encounter.createdAt || encounter.linkCreatedAt
-                      const formattedDate = encounterDate ? formatDate(encounterDate) : 'Unknown date'
+                      const formattedDateTime = encounterDate ? formatTime(encounterDate) : 'Unknown date'
                       
                       return (
                         <div key={encounter._id} className="flex items-center justify-between text-xs">
                           <span className="text-gray-600">
-                            {formattedDate}
+                            {formattedDateTime}
                           </span>
                           <Badge variant="outline" className="text-xs">
-                            {encounter.status || 'unknown'}
+                            {encounter.status ? getStatusText(encounter.status) : 'No status'}
                           </Badge>
                         </div>
                       )
