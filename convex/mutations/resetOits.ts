@@ -1,5 +1,6 @@
 import { mutation } from '../_generated/server'
 import { v } from 'convex/values'
+import { generateOIT, generateLiveKitRoomName } from '../lib/utils'
 
 export const resetOits = mutation({
   args: {},
@@ -96,7 +97,7 @@ export const resetOits = mutation({
         })
 
         // Create invite
-        const oit = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+        const oit = generateOIT()
         const inviteId = await ctx.db.insert('invites', {
           encounterId,
           oit,
@@ -105,15 +106,28 @@ export const resetOits = mutation({
           redeemedAt: null,
         })
 
+        // Create LiveKit room
+        const livekitRoom = generateLiveKitRoomName(encounterId)
+        const roomId = await ctx.db.insert('rooms', {
+          encounterId,
+          livekitRoom,
+          policy: {
+            allowAlone: true,
+          },
+          active: true,
+        })
+
         createdEncounters.push({
           encounterId,
           inviteId,
+          roomId,
           oit,
           inviteUrl: `/${encounterData.providerRoom}/${oit}`,
-          patientEmail: encounterData.patientHint.value
+          patientEmail: encounterData.patientHint.value,
+          livekitRoom
         })
         
-        console.log(`✅ Created encounter: ${encounterData.patientHint.value}`)
+        console.log(`✅ Created encounter: ${encounterData.patientHint.value} with room: ${livekitRoom}`)
       }
 
       console.log('✅ OIT reset complete!')

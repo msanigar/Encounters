@@ -78,7 +78,7 @@ export default defineSchema({
   }).index('by_encounter', ['encounterId']),
 
   journal_events: defineTable({
-    encounterId: v.id('encounters'),
+    encounterId: v.union(v.id('encounters'), v.null()),
     type: v.string(),
     payload: v.any(),
     at: v.number(),
@@ -96,4 +96,70 @@ export default defineSchema({
       v.literal('submitted')
     ),
   }).index('by_encounter', ['encounterId']),
+
+  patients: defineTable({
+    displayName: v.string(),
+    emailOrPhone: v.string(),
+    createdAt: v.number(),
+  })
+    .index('by_contact', ['emailOrPhone'])
+    .index('by_created', ['createdAt']),
+
+  patient_links: defineTable({
+    patientId: v.id('patients'),
+    encounterId: v.id('encounters'),
+    createdAt: v.number(),
+  })
+    .index('by_patient', ['patientId'])
+    .index('by_encounter', ['encounterId'])
+    .index('by_created', ['createdAt']),
+
+  form_assignments: defineTable({
+    encounterId: v.id('encounters'),
+    formId: v.string(), // 'intake' for now
+    assignedAt: v.number(),
+    status: v.union(
+      v.literal('incomplete'),
+      v.literal('in-progress'),
+      v.literal('complete')
+    ),
+  })
+    .index('by_encounter', ['encounterId'])
+    .index('by_form', ['formId'])
+    .index('by_status', ['status']),
+
+  form_submissions: defineTable({
+    encounterId: v.id('encounters'),
+    patientId: v.optional(v.id('patients')),
+    formId: v.string(),
+    answers: v.any(), // JSON object with form answers
+    submittedAt: v.number(),
+  })
+    .index('by_encounter', ['encounterId'])
+    .index('by_patient', ['patientId'])
+    .index('by_form', ['formId'])
+    .index('by_submitted', ['submittedAt']),
+
+  preencounter_visits: defineTable({
+    providerId: v.string(),
+    providerRoom: v.string(),
+    displayName: v.string(),
+    reasonForVisit: v.string(),
+    contactInfo: v.optional(v.string()), // email or phone
+    status: v.union(
+      v.literal('waiting'),
+      v.literal('in-progress'),
+      v.literal('completed'),
+      v.literal('cancelled')
+    ),
+    queuePosition: v.number(),
+    checkedInAt: v.number(),
+    estimatedWaitTime: v.optional(v.number()), // minutes
+    encounterId: v.optional(v.id('encounters')), // Set when converted to encounter
+  })
+    .index('by_provider', ['providerId'])
+    .index('by_room', ['providerRoom'])
+    .index('by_status', ['status'])
+    .index('by_queue', ['queuePosition'])
+    .index('by_checkin', ['checkedInAt']),
 })

@@ -16,6 +16,7 @@ export interface LiveKitClientConfig {
   selectedCamId?: string | null
   onConnectionStateChanged?: (state: ConnectionState) => void
   onParticipantConnected?: (participant: RemoteParticipant) => void
+  onParticipantDisconnected?: (participant: RemoteParticipant) => void
   onTrackSubscribed?: (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => void
 }
 
@@ -98,6 +99,10 @@ export class LiveKitClient {
       // Set up essential event listeners only
       this.room.on(RoomEvent.ParticipantConnected, (participant: RemoteParticipant) => {
         config.onParticipantConnected?.(participant)
+      })
+
+      this.room.on(RoomEvent.ParticipantDisconnected, (participant: RemoteParticipant) => {
+        config.onParticipantDisconnected?.(participant)
       })
 
       this.room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => {

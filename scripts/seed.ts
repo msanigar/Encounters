@@ -7,7 +7,32 @@ async function seed() {
   console.log('🌱 Seeding database...')
 
   try {
+    // Create sample patients first
+    console.log('👥 Creating sample patients...')
+    const patients = [
+      {
+        displayName: 'John Doe',
+        emailOrPhone: 'john.doe@example.com',
+      },
+      {
+        displayName: 'Jane Smith',
+        emailOrPhone: 'jane.smith@example.com',
+      },
+      {
+        displayName: 'Bob Wilson',
+        emailOrPhone: 'bob.wilson@example.com',
+      },
+    ]
+
+    const createdPatients = []
+    for (const patientData of patients) {
+      const patientId = await client.mutation(api.mutations.patients.create, patientData)
+      createdPatients.push({ ...patientData, id: patientId })
+      console.log(`✅ Created patient: ${patientData.displayName}`)
+    }
+
     // Create sample encounters
+    console.log('📅 Creating sample encounters...')
     const encounters = [
       {
         providerId: 'provider-demo-001',

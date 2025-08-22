@@ -42,6 +42,7 @@ export function PatientMediaCanvas({
   const [participants, setParticipants] = useState<string[]>([])
   const [publishedTracks, setPublishedTracks] = useState<string[]>([])
   const [subscribedTracks, setSubscribedTracks] = useState<string[]>([])
+  const [remoteTracks, setRemoteTracks] = useState<{ [participantId: string]: { audio?: MediaStreamTrack, video?: MediaStreamTrack } }>({})
 
   const remoteVideoRef = useRef<HTMLVideoElement>(null)
   const hasJoined = useRef(false)
@@ -100,6 +101,27 @@ export function PatientMediaCanvas({
             return newParticipants
           })
         },
+        onParticipantDisconnected: (participant: RemoteParticipant) => {
+          console.log('Participant disconnected:', participant.identity)
+          addDebugInfo(`Participant left: ${participant.identity}`)
+          setParticipants(prev => prev.filter(p => p !== participant.identity))
+          
+          // Clean up tracks for this participant
+          setRemoteTracks(prev => {
+            const { [participant.identity]: removed, ...remaining } = prev
+            console.log('Cleaned up tracks for participant:', participant.identity)
+            return remaining
+          })
+          
+          // Clear remote video if no participants left
+          setParticipants(prev => {
+            if (prev.length === 0) {
+              setRemoteVideo(null)
+              addDebugInfo('No participants left, cleared remote video')
+            }
+            return prev
+          })
+        },
         onTrackSubscribed: (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => {
           console.log('Track subscribed:', track.kind, 'from participant:', participant.identity)
           console.log('Remote track device info:', {
@@ -113,19 +135,30 @@ export function PatientMediaCanvas({
           addDebugInfo(`Track subscribed: ${track.kind} from ${participant.identity}`)
           setSubscribedTracks(prev => [...prev, `${participant.identity}-${track.kind}`])
           
-          if (track.kind === 'video') {
-            // Get the remote stream directly from the track
-            const remoteStream = new MediaStream([track.mediaStreamTrack])
-            console.log('Created remote video stream:', remoteStream)
-            console.log('Remote track info:', {
-              id: track.mediaStreamTrack.id,
-              kind: track.mediaStreamTrack.kind,
-              enabled: track.mediaStreamTrack.enabled,
-              readyState: track.mediaStreamTrack.readyState
-            })
-            setRemoteVideo(remoteStream)
-            addDebugInfo(`Remote video set from ${participant.identity}`)
-          } else if (track.kind === 'audio') {
+          // Accumulate tracks for this participant
+          setRemoteTracks(prev => {
+            const participantTracks = prev[participant.identity] || {}
+            const updatedTracks = {
+              ...prev,
+              [participant.identity]: {
+                ...participantTracks,
+                [track.kind]: track.mediaStreamTrack
+              }
+            }
+            
+            // Create combined stream with all tracks from this participant
+            const tracks = Object.values(updatedTracks[participant.identity])
+            if (tracks.length > 0) {
+              const combinedStream = new MediaStream(tracks)
+              console.log('Created combined remote stream:', combinedStream, 'with tracks:', tracks.map(t => ({ kind: t.kind, id: t.id })))
+              setRemoteVideo(combinedStream)
+              addDebugInfo(`Combined stream set from ${participant.identity} with ${tracks.length} tracks`)
+            }
+            
+            return updatedTracks
+          })
+          
+          if (track.kind === 'audio') {
             // Handle audio track - create audio element and play
             const audioElement = new Audio()
             audioElement.srcObject = new MediaStream([track.mediaStreamTrack])

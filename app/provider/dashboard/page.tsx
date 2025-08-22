@@ -7,6 +7,9 @@ import { MediaCanvas } from '@/components/CenterStage/MediaCanvas'
 import { WorkflowMode } from '@/components/CenterStage/WorkflowMode'
 import { ChatPanel } from '@/components/ChatPanel/ChatPanel'
 import { MediaControls } from '@/components/MediaControls/MediaControls'
+import { PatientSelector } from '@/components/PatientSelector/PatientSelector'
+import { ScheduleEncounter } from '@/components/ScheduleEncounter/ScheduleEncounter'
+import { QueueManagement } from '@/components/QueueManagement/QueueManagement'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { Button } from '@/components/ui/button'
@@ -21,6 +24,8 @@ export default function ProviderDashboard() {
   const [providerId, setProviderId] = useState<string | null>(null)
   const [debugData, setDebugData] = useState<any>(null)
   const [isResetting, setIsResetting] = useState(false)
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
+  const [selectedPatient, setSelectedPatient] = useState<any>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -96,6 +101,11 @@ export default function ProviderDashboard() {
     setActiveEncounterId(null)
     setIsInMedia(false)
     updateUrl(null, false)
+  }
+
+  const handlePatientSelect = (patientId: string, patient: any) => {
+    setSelectedPatientId(patientId || null)
+    setSelectedPatient(patient)
   }
 
   const handleResetOits = async () => {
@@ -205,55 +215,45 @@ export default function ProviderDashboard() {
                     </p>
                   </div>
                   
-                  {/* Scheduler Placeholder */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Today's Schedule */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
-                                             <h3 className="text-lg font-semibold text-gray-900 mb-4">Today&apos;s Schedule</h3>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                          <div>
-                            <p className="font-medium text-blue-900">bob.wilson@example.com</p>
-                            <p className="text-sm text-blue-700">20:09 - Waiting Room</p>
-                          </div>
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        </div>
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div>
-                            <p className="font-medium text-gray-900">jane.smith@example.com</p>
-                            <p className="text-sm text-gray-700">19:09 - Scheduled</p>
-                          </div>
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        </div>
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div>
-                            <p className="font-medium text-gray-900">john.doe@example.com</p>
-                            <p className="text-sm text-gray-700">19:14 - Scheduled</p>
-                          </div>
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        </div>
-                      </div>
-                    </div>
+                  {/* Patient Management */}
+                  <div className="space-y-6">
+                    {/* Patient Selector */}
+                    <PatientSelector 
+                      onPatientSelect={handlePatientSelect}
+                      selectedPatientId={selectedPatientId}
+                    />
+
+                    {/* Schedule Encounter */}
+                    <ScheduleEncounter
+                      selectedPatientId={selectedPatientId}
+                      selectedPatient={selectedPatient}
+                      providerId={providerId || 'provider-demo-001'}
+                      providerRoom="demo-room"
+                    />
+
+                    {/* Queue Management */}
+                    <QueueManagement
+                      providerId={providerId || 'provider-demo-001'}
+                      onEncounterCreated={(encounterId) => {
+                        setActiveEncounterId(encounterId)
+                        setIsInMedia(false)
+                        updateUrl(encounterId, false)
+                      }}
+                    />
 
                     {/* Quick Actions */}
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                       <div className="space-y-3">
-                        <Button className="w-full justify-start" variant="outline">
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Schedule New Appointment
-                        </Button>
-                        <Button className="w-full justify-start" variant="outline">
-                          <User className="w-4 h-4 mr-2" />
-                          View Patient Directory
-                        </Button>
+                        <Link href="/provider/calendar">
+                          <Button className="w-full justify-start" variant="outline">
+                            <Calendar className="w-4 h-4 mr-2" />
+                            View Calendar
+                          </Button>
+                        </Link>
                         <Button className="w-full justify-start" variant="outline">
                           <FileText className="w-4 h-4 mr-2" />
                           Review Past Encounters
-                        </Button>
-                        <Button className="w-full justify-start" variant="outline">
-                          <Settings className="w-4 h-4 mr-2" />
-                          Practice Settings
                         </Button>
                         <Button 
                           className="w-full justify-start" 
