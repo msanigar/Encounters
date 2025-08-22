@@ -5,11 +5,12 @@ import { api } from '@/convex/_generated/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { useToast } from '@/components/ui/toast'
+import { useToast, Toast } from '@/components/ui/toast'
 import { getStatusColor, getStatusText, formatDate } from '@/lib/utils'
 import { Video, Clock, User, Phone, Copy, Link as LinkIcon, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { DebugPanel } from './DebugPanel'
+import { useEffect, useRef } from 'react'
 
 interface EncounterListProps {
   providerId: string
@@ -21,6 +22,9 @@ interface EncounterListProps {
 export function EncounterList({ providerId, onEncounterSelect, activeEncounterId, debugData }: EncounterListProps) {
   const encounters = useQuery(api.queries.encounters.listForProviderWithInvites, { providerId })
   const { toast, showToast, hideToast } = useToast()
+  
+  // Track previous check-in states for toast notifications
+  const previousStates = useRef<Record<string, string>>({})
 
   // Filter to today's encounters by default
   const todaysEncounters = encounters?.filter((encounter: any) => {
@@ -63,12 +67,74 @@ export function EncounterList({ providerId, onEncounterSelect, activeEncounterId
           {todaysEncounters.map((encounter: any) => {
             const EncounterPresence = () => {
               const presence = useQuery(api.queries.presence.summary, { encounterId: encounter._id })
+              
+              // Track check-in state changes for toast notifications
+              useEffect(() => {
+                if (!presence) return
+                
+                const previousState = previousStates.current[encounter._id]
+                const currentState = presence.checkInState
+                
+                if (previousState && previousState !== currentState) {
+                  // Show toast for state transitions
+                  switch (currentState) {
+                    case 'arrived':
+                      showToast(`Patient has arrived for encounter`)
+                      break
+                    case 'in-call':
+                      showToast(`Patient joined the call`)
+                      break
+                    case 'workflow':
+                      showToast(`Encounter moved to workflow mode`)
+                      break
+                  }
+                }
+                
+                // Update previous state
+                previousStates.current[encounter._id] = currentState
+              }, [presence?.checkInState, encounter._id, showToast])
+              
               if (!presence) return null
               
+              const getCheckInBadge = () => {
+                switch (presence.checkInState) {
+                  case 'arrived':
+                    return (
+                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full mr-1" />
+                        Arrived
+                      </Badge>
+                    )
+                  case 'in-call':
+                    return (
+                      <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mr-1" />
+                        In Call
+                      </Badge>
+                    )
+                  case 'workflow':
+                    return (
+                      <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-1" />
+                        Workflow
+                      </Badge>
+                    )
+                  default:
+                    return (
+                      <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-200">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full mr-1" />
+                        Not Arrived
+                      </Badge>
+                    )
+                }
+              }
+              
               return (
-                <div className="flex items-center space-x-1 text-xs text-gray-500">
-                  <div className={`w-2 h-2 rounded-full ${presence.hasProvider ? 'bg-green-500' : 'bg-gray-300'}`} />
-                  <span>{presence.onlineCount} online</span>
+                <div className="flex items-center space-x-2">
+                  {getCheckInBadge()}
+                  <div className="flex items-center space-x-1 text-xs text-gray-500">
+                    <span>{presence.onlineCount} online</span>
+                  </div>
                 </div>
               )
             }
@@ -144,6 +210,13 @@ export function EncounterList({ providerId, onEncounterSelect, activeEncounterId
           <div className="h-8 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none" />
         )}
       </div>
+      
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
     </div>
   )
 }

@@ -205,6 +205,18 @@ export const deleteEncounter = mutation({
       throw new Error('Cannot delete an active encounter')
     }
 
+    // Log the cancellation to journal before deleting
+    await ctx.db.insert('journal_events', {
+      encounterId: args.encounterId,
+      type: 'ENCOUNTER_CANCELLED',
+      payload: {
+        cancelledAt: Date.now(),
+        originalScheduledAt: encounter.scheduledAt,
+        patientHint: encounter.patientHint,
+      },
+      at: Date.now(),
+    })
+
     // Delete related records
     // Delete invites
     const invites = await ctx.db

@@ -186,3 +186,42 @@ export const updateQueueStatus = mutation({
     return args.visitId
   },
 })
+
+export const cleanupOldQueueEntries = mutation({
+  args: {
+    olderThanMinutes: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now()
+    const threshold = (args.olderThanMinutes || 30) * 60 * 1000 // Default 30 minutes
+    
+    console.log(`🧹 Cleaning up queue entries older than ${args.olderThanMinutes || 30} minutes...`)
+    
+    // Get all preencounter visits for the provider
+    const allVisits = await ctx.db
+      .query('preencounter_visits')
+      .withIndex('by_provider', (q) => q.eq('providerId', 'provider-demo-001'))
+      .collect()
+    
+    let cleanedCount = 0
+    
+    for (const visit of allVisits) {
+      const age = now - visit.checkedInAt
+      const ageMinutes = Math.round(age / (60 * 1000))
+      
+      if (age > threshold) {
+        console.log(`🧹 Cleaning up old visit: ${visit.displayName} (${ageMinutes}m old, status: ${visit.status})`)
+        
+        // Mark as completed to remove from queue
+        await ctx.db.patch(visit._id, {
+          status: 'completed'
+        })
+        
+        cleanedCount++
+      }
+    }
+    
+    console.log(`✅ Queue cleanup complete: ${cleanedCount} entries cleaned`)
+    return { cleanedCount }
+  },
+})

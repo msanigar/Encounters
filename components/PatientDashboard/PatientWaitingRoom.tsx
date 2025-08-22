@@ -12,9 +12,8 @@ import {
   User, 
   Clock, 
   FileText, 
-  Phone, 
-  CheckCircle,
-  AlertCircle
+  Phone,
+  Send
 } from 'lucide-react'
 import { formatTime } from '@/lib/utils'
 
@@ -37,6 +36,9 @@ export function PatientWaitingRoom({
   const encounter = useQuery(api.queries.encounters.get, { encounterId: encounterId as any })
   const workflow = useQuery(api.queries.workflows.get, { encounterId: encounterId as any })
   const submitWorkflow = useMutation(api.mutations.workflow.submit)
+  
+  // Get form assignments for this encounter
+  const formAssignments = useQuery(api.queries.forms.getAssignments, { encounterId: encounterId as any })
 
   const handleFormSubmit = async (formId: string) => {
     try {
@@ -55,29 +57,27 @@ export function PatientWaitingRoom({
     }
   }
 
-  const sampleForms = [
-    {
-      id: 'consent-form',
-      title: 'Consent Form',
-      description: 'Please review and sign the consent form',
-      fields: [
-        { id: 'consent', label: 'I consent to treatment', type: 'checkbox' },
-        { id: 'emergency_contact', label: 'Emergency Contact', type: 'text' },
-        { id: 'allergies', label: 'Allergies', type: 'textarea' }
-      ]
-    },
-    {
-      id: 'symptoms-form',
-      title: 'Symptoms Checklist',
-      description: 'Please describe your current symptoms',
-      fields: [
-        { id: 'primary_symptom', label: 'Primary Symptom', type: 'text' },
-        { id: 'symptom_duration', label: 'How long?', type: 'text' },
-        { id: 'severity', label: 'Severity (1-10)', type: 'number' },
-        { id: 'additional_symptoms', label: 'Other symptoms', type: 'textarea' }
-      ]
-    }
-  ]
+  // Only show Intake form if it's assigned
+  const assignedForms = formAssignments?.filter(assignment => assignment.formId === 'intake') || []
+  
+  // Intake form definition
+  const intakeForm = {
+    id: 'intake',
+    title: 'Patient Intake Form',
+    description: 'Please complete this form before your appointment begins',
+    fields: [
+      { id: 'fullName', label: 'Full Name', type: 'text', required: true },
+      { id: 'dateOfBirth', label: 'Date of Birth', type: 'date', required: true },
+      { id: 'phoneNumber', label: 'Phone Number', type: 'text', required: true },
+      { id: 'emergencyContact', label: 'Emergency Contact', type: 'text' },
+      { id: 'allergies', label: 'Allergies', type: 'textarea' },
+      { id: 'currentMedications', label: 'Current Medications', type: 'textarea' },
+      { id: 'medicalHistory', label: 'Medical History', type: 'textarea' },
+      { id: 'reasonForVisit', label: 'Reason for Visit', type: 'textarea', required: true },
+      { id: 'symptoms', label: 'Current Symptoms', type: 'textarea' },
+      { id: 'shareWithProvider', label: 'I consent to share this information with my healthcare provider', type: 'checkbox', required: true }
+    ]
+  }
 
   if (!encounter) {
     return (
@@ -134,25 +134,7 @@ export function PatientWaitingRoom({
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <CheckCircle className="w-5 h-5 mr-2" />
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
-                  <FileText className="w-4 h-4 mr-2" />
-                  View Medical History
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  Report Technical Issues
-                </Button>
-              </CardContent>
-            </Card>
+
           </div>
 
           {/* Center Column - Forms */}
@@ -165,72 +147,98 @@ export function PatientWaitingRoom({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {sampleForms.map((form) => (
-                  <div key={form.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{form.title}</h3>
-                        <p className="text-sm text-gray-600">{form.description}</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant={activeForm === form.id ? "default" : "outline"}
-                        onClick={() => setActiveForm(activeForm === form.id ? null : form.id)}
-                      >
-                        {activeForm === form.id ? 'Close' : 'Open'}
-                      </Button>
-                    </div>
-                    
-                    {activeForm === form.id && (
-                      <div className="space-y-3">
-                        {form.fields.map((field) => (
-                          <div key={field.id}>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              {field.label}
-                            </label>
-                            {field.type === 'textarea' ? (
-                              <Textarea
-                                value={formResponses[form.id]?.[field.id] || ''}
-                                onChange={(e) => setFormResponses(prev => ({
-                                  ...prev,
-                                  [form.id]: { ...prev[form.id], [field.id]: e.target.value }
-                                }))}
-                                placeholder={`Enter ${field.label.toLowerCase()}`}
-                              />
-                            ) : field.type === 'checkbox' ? (
-                              <input
-                                type="checkbox"
-                                checked={formResponses[form.id]?.[field.id] || false}
-                                onChange={(e) => setFormResponses(prev => ({
-                                  ...prev,
-                                  [form.id]: { ...prev[form.id], [field.id]: e.target.checked }
-                                }))}
-                                className="mr-2"
-                              />
-                            ) : (
-                              <Input
-                                type={field.type}
-                                value={formResponses[form.id]?.[field.id] || ''}
-                                onChange={(e) => setFormResponses(prev => ({
-                                  ...prev,
-                                  [form.id]: { ...prev[form.id], [field.id]: e.target.value }
-                                }))}
-                                placeholder={`Enter ${field.label.toLowerCase()}`}
-                              />
-                            )}
-                          </div>
-                        ))}
-                        <Button
-                          size="sm"
-                          onClick={() => handleFormSubmit(form.id)}
-                          className="w-full"
-                        >
-                          Submit Form
-                        </Button>
-                      </div>
-                    )}
+                {assignedForms.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p className="text-sm">No forms assigned yet</p>
+                    <p className="text-xs">Your provider will assign forms when ready</p>
                   </div>
-                ))}
+                ) : (
+                  assignedForms.map((assignment) => {
+                    const form = intakeForm // Only intake form for now
+                    const isCompleted = assignment.status === 'complete'
+                    
+                    return (
+                      <div key={assignment._id} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h3 className="font-medium text-gray-900">{form.title}</h3>
+                            <p className="text-sm text-gray-600">{form.description}</p>
+                            <Badge 
+                              variant={isCompleted ? "default" : "secondary"}
+                              className="mt-1"
+                            >
+                              {isCompleted ? 'Completed' : 'Incomplete'}
+                            </Badge>
+                          </div>
+                          {!isCompleted && (
+                            <Button
+                              size="sm"
+                              variant={activeForm === form.id ? "default" : "outline"}
+                              onClick={() => setActiveForm(activeForm === form.id ? null : form.id)}
+                            >
+                              {activeForm === form.id ? 'Close' : 'Open'}
+                            </Button>
+                          )}
+                        </div>
+                        
+                        {activeForm === form.id && !isCompleted && (
+                          <div className="space-y-3">
+                            {form.fields.map((field) => (
+                              <div key={field.id}>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  {field.label}
+                                  {field.required && <span className="text-red-500 ml-1">*</span>}
+                                </label>
+                                {field.type === 'textarea' ? (
+                                  <Textarea
+                                    value={formResponses[form.id]?.[field.id] || ''}
+                                    onChange={(e) => setFormResponses(prev => ({
+                                      ...prev,
+                                      [form.id]: { ...prev[form.id], [field.id]: e.target.value }
+                                    }))}
+                                    placeholder={`Enter ${field.label.toLowerCase()}`}
+                                  />
+                                ) : field.type === 'checkbox' ? (
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={formResponses[form.id]?.[field.id] || false}
+                                      onChange={(e) => setFormResponses(prev => ({
+                                        ...prev,
+                                        [form.id]: { ...prev[form.id], [field.id]: e.target.checked }
+                                      }))}
+                                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <label className="text-sm text-gray-700">{field.label}</label>
+                                  </div>
+                                ) : (
+                                  <Input
+                                    type={field.type}
+                                    value={formResponses[form.id]?.[field.id] || ''}
+                                    onChange={(e) => setFormResponses(prev => ({
+                                      ...prev,
+                                      [form.id]: { ...prev[form.id], [field.id]: e.target.value }
+                                    }))}
+                                    placeholder={`Enter ${field.label.toLowerCase()}`}
+                                  />
+                                )}
+                              </div>
+                            ))}
+                            <Button
+                              size="sm"
+                              onClick={() => handleFormSubmit(form.id)}
+                              className="w-full"
+                            >
+                              <Send className="w-4 h-4 mr-2" />
+                              Submit Form
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })
+                )}
               </CardContent>
             </Card>
           </div>

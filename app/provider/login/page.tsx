@@ -25,7 +25,7 @@ export default function ProviderLogin() {
     try {
       const result = await authenticateProvider({ email, password })
       
-      if (result.success) {
+      if (result.success && result.sessionId && result.provider) {
         // Store session information
         localStorage.setItem('sessionId', result.sessionId)
         localStorage.setItem('providerId', result.provider.id)

@@ -11,7 +11,6 @@ import {
   Clock, 
   User, 
   Plus,
-  Video,
   Phone
 } from 'lucide-react'
 import { formatTime } from '@/lib/utils'
@@ -108,26 +107,7 @@ export default function ProviderMainDashboard() {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  View Calendar
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <User className="w-4 h-4 mr-2" />
-                  Patient Directory
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Video className="w-4 h-4 mr-2" />
-                  Test Call
-                </Button>
-              </CardContent>
-            </Card>
+
           </div>
 
           {/* Center Column - Encounters */}

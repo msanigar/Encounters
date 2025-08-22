@@ -123,3 +123,177 @@ export const deleteEncounter = mutation({
     await ctx.db.delete(args.encounterId)
   },
 })
+
+export const tidyStale = mutation({
+  args: {
+    now: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const now = args.now || Date.now()
+    const staleThreshold = 5 * 60 * 1000 // 5 minutes
+    const oldScheduledThreshold = 30 * 60 * 1000 // 30 minutes for old scheduled encounters
+    
+    console.log('🧹 Starting auto-tidy of stale encounters...')
+    
+    let tidiedCount = 0
+    
+    // 1. Clean up active encounters with stale presence
+    const activeEncounters = await ctx.db
+      .query('encounters')
+      .withIndex('by_status', (q) => q.eq('status', 'active'))
+      .collect()
+    
+    for (const encounter of activeEncounters) {
+      // Get patient participants for this encounter
+      const patientParticipants = await ctx.db
+        .query('participants')
+        .withIndex('by_encounter', (q) => q.eq('encounterId', encounter._id))
+        .filter((q) => q.eq(q.field('role'), 'patient'))
+        .collect()
+      
+      // Check if any patient is still online
+      const hasPatientOnline = patientParticipants.some(p => {
+        if (p.presence === 'offline') return false
+        return (now - p.lastSeen) < staleThreshold
+      })
+      
+      // Get provider participants
+      const providerParticipants = await ctx.db
+        .query('participants')
+        .withIndex('by_encounter', (q) => q.eq('encounterId', encounter._id))
+        .filter((q) => q.eq(q.field('role'), 'provider'))
+        .collect()
+      
+      // Check if provider is in-call (online and recently seen)
+      const hasProviderInCall = providerParticipants.some(p => {
+        if (p.presence === 'offline') return false
+        return (now - p.lastSeen) < staleThreshold
+      })
+      
+      // If no patient online and provider not in-call, mark as ended
+      if (!hasPatientOnline && !hasProviderInCall) {
+        await ctx.db.patch(encounter._id, {
+          status: 'ended',
+          endedAt: now,
+        })
+        
+        // Log the auto-ending
+        await ctx.db.insert('journal_events', {
+          encounterId: encounter._id,
+          type: 'ENCOUNTER_AUTO_ENDED',
+          payload: {
+            reason: 'stale_presence',
+            autoEndedAt: now,
+            patientParticipants: patientParticipants.length,
+            providerParticipants: providerParticipants.length,
+          },
+          at: now,
+        })
+        
+        tidiedCount++
+        console.log(`✅ Auto-ended active encounter ${encounter._id} due to stale presence`)
+      }
+    }
+    
+    // 2. Clean up old scheduled encounters that have been sitting too long
+    const scheduledEncounters = await ctx.db
+      .query('encounters')
+      .withIndex('by_status', (q) => q.eq('status', 'scheduled'))
+      .collect()
+    
+    for (const encounter of scheduledEncounters) {
+      // Check if this scheduled encounter is old (created more than 30 minutes ago)
+      const encounterAge = now - encounter.createdAt
+      
+      if (encounterAge > oldScheduledThreshold) {
+        // Get participants to check if anyone is actually online
+        const participants = await ctx.db
+          .query('participants')
+          .withIndex('by_encounter', (q) => q.eq('encounterId', encounter._id))
+          .collect()
+        
+        // Check if any participant is online
+        const hasAnyoneOnline = participants.some(p => {
+          if (p.presence === 'offline') return false
+          return (now - p.lastSeen) < staleThreshold
+        })
+        
+        // If no one is online and encounter is old, mark as ended
+        if (!hasAnyoneOnline) {
+          await ctx.db.patch(encounter._id, {
+            status: 'ended',
+            endedAt: now,
+          })
+          
+          // Log the auto-ending
+          await ctx.db.insert('journal_events', {
+            encounterId: encounter._id,
+            type: 'ENCOUNTER_AUTO_ENDED',
+            payload: {
+              reason: 'old_scheduled_no_presence',
+              autoEndedAt: now,
+              encounterAge: encounterAge,
+              participants: participants.length,
+            },
+            at: now,
+          })
+          
+          tidiedCount++
+          console.log(`✅ Auto-ended old scheduled encounter ${encounter._id} (age: ${Math.round(encounterAge / 60000)}min)`)
+        }
+      }
+    }
+    
+    console.log(`🧹 Auto-tidy complete: ${tidiedCount} encounters ended`)
+    return { tidiedCount }
+  },
+})
+
+export const forceCleanupOldEncounters = mutation({
+  args: {
+    olderThanHours: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now()
+    const hoursThreshold = (args.olderThanHours || 1) * 60 * 60 * 1000 // Default 1 hour
+    
+    console.log(`🧹 Force cleaning up encounters older than ${args.olderThanHours || 1} hour(s)...`)
+    
+    // Get all encounters
+    const allEncounters = await ctx.db.query('encounters').collect()
+    
+    let cleanedCount = 0
+    
+    for (const encounter of allEncounters) {
+      const encounterAge = now - encounter.createdAt
+      
+      if (encounterAge > hoursThreshold) {
+        // Mark as ended
+        await ctx.db.patch(encounter._id, {
+          status: 'ended',
+          endedAt: now,
+        })
+        
+        // Log the cleanup
+        await ctx.db.insert('journal_events', {
+          encounterId: encounter._id,
+          type: 'ENCOUNTER_FORCE_CLEANED',
+          payload: {
+            reason: 'manual_cleanup_old_encounter',
+            cleanedAt: now,
+            encounterAge: encounterAge,
+            originalStatus: encounter.status,
+            ageInHours: Math.round(encounterAge / (60 * 60 * 1000)),
+          },
+          at: now,
+        })
+        
+        cleanedCount++
+        console.log(`✅ Force cleaned old encounter ${encounter._id} (age: ${Math.round(encounterAge / (60 * 60 * 1000))}h, was: ${encounter.status})`)
+      }
+    }
+    
+    console.log(`🧹 Force cleanup complete: ${cleanedCount} encounters cleaned`)
+    return { cleanedCount }
+  },
+})

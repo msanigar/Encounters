@@ -15,6 +15,7 @@ import type {
 } from "convex/server";
 import type * as actions_email from "../actions/email.js";
 import type * as actions_livekit from "../actions/livekit.js";
+import type * as actions_testEmail from "../actions/testEmail.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as lib_utils from "../lib/utils.js";
 import type * as mutations_auth from "../mutations/auth.js";
@@ -54,6 +55,7 @@ import type * as queries_workflows from "../queries/workflows.js";
 declare const fullApi: ApiFromModules<{
   "actions/email": typeof actions_email;
   "actions/livekit": typeof actions_livekit;
+  "actions/testEmail": typeof actions_testEmail;
   "lib/constants": typeof lib_constants;
   "lib/utils": typeof lib_utils;
   "mutations/auth": typeof mutations_auth;

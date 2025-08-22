@@ -104,25 +104,73 @@ export function CalendarView({ providerId }: CalendarViewProps) {
   return (
     <div className="max-w-6xl mx-auto p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
-          <p className="text-gray-600">View and manage your scheduled encounters</p>
-        </div>
-        <div className="flex items-center space-x-4">
-          <Button variant="outline" onClick={handlePreviousMonth}>
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <h2 className="text-xl font-semibold text-gray-900">
-            {getMonthName(month)} {year}
-          </h2>
-          <Button variant="outline" onClick={handleNextMonth}>
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
+              <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
+            <p className="text-gray-600">View and manage your scheduled encounters</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Button 
+              variant="outline" 
+              onClick={handlePreviousMonth}
+              className="flex items-center gap-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </Button>
+            <h2 className="text-xl font-semibold text-gray-900">
+              {getMonthName(month)} {year}
+            </h2>
+            <Button 
+              variant="outline" 
+              onClick={handleNextMonth}
+              className="flex items-center gap-2"
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+                </div>
 
-      {/* Calendar Grid */}
+        {/* Quick Actions */}
+        {encounters && encounters.length > 0 && (
+          <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-blue-900">Quick Actions</h3>
+                <p className="text-xs text-blue-700">
+                  {encounters.filter((e: any) => e.status === 'scheduled').length} scheduled encounters
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const scheduledEncounters = encounters.filter((e: any) => e.status === 'scheduled')
+                    if (scheduledEncounters.length > 0) {
+                      if (confirm(`Delete all ${scheduledEncounters.length} scheduled encounters?`)) {
+                        scheduledEncounters.forEach(async (encounter: any) => {
+                          try {
+                            await deleteEncounter({ encounterId: encounter._id })
+                          } catch (error) {
+                            console.error('Failed to delete encounter:', error)
+                          }
+                        })
+                      }
+                    }
+                  }}
+                  className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Clear All Scheduled
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Calendar Grid */}
       <Card>
         <CardContent className="p-6">
           {/* Weekday Headers */}
@@ -184,27 +232,41 @@ export function CalendarView({ providerId }: CalendarViewProps) {
                             <span className="truncate">
                               {encounter.patient?.displayName || encounter.patientHint?.value || 'Patient'}
                             </span>
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
-                              <Edit className="w-3 h-3" />
-                              <div
-                                title={isActive ? 'Cannot delete active encounter' : 'Delete encounter'}
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-4 w-4 p-0 hover:bg-red-50"
+                                title="Reschedule encounter"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSelectedEncounter(encounter)
+                                  setIsRescheduling(true)
+                                }}
                               >
-                                <Trash2 
-                                  className={`w-3 h-3 ${
-                                    isActive 
-                                      ? 'text-gray-400 cursor-not-allowed' 
-                                      : 'text-red-600 hover:text-red-800'
-                                  }`}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    if (isActive) {
-                                      alert('Cannot delete an active encounter. Please end the call first.')
-                                      return
-                                    }
-                                    setEncounterToDelete(encounter)
-                                  }}
-                                />
-                              </div>
+                                <Edit className="w-3 h-3 text-blue-600" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className={`h-4 w-4 p-0 ${
+                                  isActive 
+                                    ? 'text-gray-400 cursor-not-allowed hover:bg-gray-50' 
+                                    : 'text-red-600 hover:bg-red-50 hover:text-red-800'
+                                }`}
+                                title={isActive ? 'Cannot delete active encounter' : 'Delete encounter'}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  if (isActive) {
+                                    alert('Cannot delete an active encounter. Please end the call first.')
+                                    return
+                                  }
+                                  setEncounterToDelete(encounter)
+                                }}
+                                disabled={isActive}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
                             </div>
                           </div>
                           <div className={`text-xs ${

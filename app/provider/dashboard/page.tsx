@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { EncounterList } from '@/components/LeftRail/EncounterList'
 import { MediaCanvas } from '@/components/CenterStage/MediaCanvas'
@@ -29,6 +29,11 @@ export default function ProviderDashboard() {
   const activeEncounter = useQuery(api.queries.encounters.getWithDetails, 
     activeEncounterId ? { encounterId: activeEncounterId as any } : 'skip'
   )
+  
+  // Auto-tidy functionality
+  const tidyStale = useMutation(api.mutations.encounter.tidyStale)
+  const cleanupQueue = useMutation(api.mutations.queue.cleanupOldQueueEntries)
+  const tidyIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Initialize state from URL on mount
   useEffect(() => {
@@ -50,6 +55,42 @@ export default function ProviderDashboard() {
     }
     setProviderId(storedProviderId)
   }, [router])
+
+  // Auto-tidy effect - run on dashboard load and every 60 seconds
+  useEffect(() => {
+    if (!providerId) return
+    
+    // Run initial tidy
+    const runTidy = async () => {
+      try {
+        // Clean up stale encounters
+        const result = await tidyStale({})
+        if (result.tidiedCount > 0) {
+          console.log(`🧹 Auto-tidied ${result.tidiedCount} stale encounters`)
+        }
+        
+        // Clean up stale queue entries
+        const queueResult = await cleanupQueue({ olderThanMinutes: 30 })
+        if (queueResult.cleanedCount > 0) {
+          console.log(`🧹 Auto-cleaned ${queueResult.cleanedCount} stale queue entries`)
+        }
+      } catch (error) {
+        console.error('Failed to run auto-tidy:', error)
+      }
+    }
+    
+    runTidy()
+    
+    // Set up interval for periodic tidy
+    tidyIntervalRef.current = setInterval(runTidy, 60 * 1000) // 60 seconds
+    
+    // Cleanup on unmount
+    return () => {
+      if (tidyIntervalRef.current) {
+        clearInterval(tidyIntervalRef.current)
+      }
+    }
+  }, [providerId, tidyStale, cleanupQueue])
 
   // Update URL when state changes
   const updateUrl = (encounterId: string | null, media: boolean) => {
