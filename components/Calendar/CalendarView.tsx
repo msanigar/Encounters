@@ -16,6 +16,7 @@ interface CalendarViewProps {
 
 export function CalendarView({ providerId }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month')
   const [selectedEncounter, setSelectedEncounter] = useState<any>(null)
   const [isRescheduling, setIsRescheduling] = useState(false)
   const [newDateTime, setNewDateTime] = useState('')
@@ -110,6 +111,31 @@ export function CalendarView({ providerId }: CalendarViewProps) {
             <p className="text-gray-600">View and manage your scheduled encounters</p>
           </div>
           <div className="flex items-center space-x-4">
+            {/* View Mode Selector */}
+            <div className="flex items-center space-x-2 mr-4">
+              <Button
+                variant={viewMode === 'month' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('month')}
+              >
+                Month
+              </Button>
+              <Button
+                variant={viewMode === 'week' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('week')}
+              >
+                Week
+              </Button>
+              <Button
+                variant={viewMode === 'day' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('day')}
+              >
+                Day
+              </Button>
+            </div>
+            
             <Button 
               variant="outline" 
               onClick={handlePreviousMonth}

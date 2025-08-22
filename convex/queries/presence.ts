@@ -10,7 +10,7 @@ export const summary = query({
       .collect()
 
     const now = Date.now()
-    const timeoutMs = 2 * 60 * 1000 // 2 minutes timeout
+    const timeoutMs = 5 * 60 * 1000 // 5 minutes timeout
 
     // Filter out participants who haven't been seen recently
     const activeParticipants = participants.filter(p => {

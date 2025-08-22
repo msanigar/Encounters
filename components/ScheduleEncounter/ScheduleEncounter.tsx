@@ -18,6 +18,7 @@ import {
   ExternalLink
 } from 'lucide-react'
 import { formatTime } from '@/lib/utils'
+import { useToast, Toast } from '@/components/ui/toast'
 
 interface ScheduleEncounterProps {
   selectedPatientId?: string | null
@@ -44,6 +45,7 @@ export function ScheduleEncounter({
   const [isScheduling, setIsScheduling] = useState(false)
   const [scheduledEncounter, setScheduledEncounter] = useState<any>(null)
   const [copiedUrl, setCopiedUrl] = useState(false)
+  const { toast, showToast, hideToast } = useToast()
 
   const createEncounterWithInvite = useMutation(api.mutations.scheduling.createEncounterWithInvite)
 
@@ -82,8 +84,7 @@ export function ScheduleEncounter({
     if (scheduledEncounter) {
       const fullUrl = `${window.location.origin}${scheduledEncounter.inviteUrl}`
       await navigator.clipboard.writeText(fullUrl)
-      setCopiedUrl(true)
-      setTimeout(() => setCopiedUrl(false), 2000)
+      showToast('Invite link copied to clipboard!')
     }
   }
 
@@ -264,6 +265,13 @@ export function ScheduleEncounter({
           </>
         )}
       </CardContent>
+      
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
     </Card>
   )
 }

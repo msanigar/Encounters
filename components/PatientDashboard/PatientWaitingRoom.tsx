@@ -35,20 +35,17 @@ export function PatientWaitingRoom({
 
   const encounter = useQuery(api.queries.encounters.get, { encounterId: encounterId as any })
   const workflow = useQuery(api.queries.workflows.get, { encounterId: encounterId as any })
-  const submitWorkflow = useMutation(api.mutations.workflow.submit)
+  const submitForm = useMutation(api.mutations.forms.submitForm)
   
   // Get form assignments for this encounter
   const formAssignments = useQuery(api.queries.forms.getAssignments, { encounterId: encounterId as any })
 
   const handleFormSubmit = async (formId: string) => {
     try {
-      await submitWorkflow({
+      await submitForm({
         encounterId: encounterId as any,
-        payload: {
-          participantId,
-          formId,
-          responses: formResponses[formId] || {}
-        }
+        formId,
+        answers: formResponses[formId] || {}
       })
       setActiveForm(null)
       setFormResponses(prev => ({ ...prev, [formId]: {} }))
@@ -103,42 +100,9 @@ export function PatientWaitingRoom({
     <div className="h-full bg-gray-50 p-6">
       {/* Main Content */}
       <div className="h-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Encounter Info */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Encounter Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <User className="w-5 h-5 mr-2" />
-                  Session Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <span className="font-medium text-gray-700">Provider:</span>
-                  <span className="ml-2 text-gray-900">Dr. Smith</span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Scheduled:</span>
-                  <span className="ml-2 text-gray-900">
-                    {encounter.scheduledAt ? formatTime(encounter.scheduledAt) : 'Not scheduled'}
-                  </span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Status:</span>
-                  <Badge className="ml-2" variant={encounter.status === 'active' ? 'default' : 'secondary'}>
-                    {encounter.status === 'active' ? 'In Progress' : 'Scheduled'}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-
-          </div>
-
-          {/* Center Column - Forms */}
-          <div className="lg:col-span-1 space-y-6">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Forms Section */}
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -242,8 +206,6 @@ export function PatientWaitingRoom({
               </CardContent>
             </Card>
           </div>
-
-
         </div>
       </div>
     </div>
