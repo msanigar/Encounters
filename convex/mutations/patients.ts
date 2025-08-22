@@ -77,6 +77,55 @@ export const upsertByContact = mutation({
   },
 })
 
+export const update = mutation({
+  args: {
+    patientId: v.id('patients'),
+    displayName: v.optional(v.string()),
+    emailOrPhone: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const patient = await ctx.db.get(args.patientId)
+    if (!patient) {
+      throw new Error('Patient not found')
+    }
+
+    // Check if email/phone is being changed and if it conflicts with existing patient
+    if (args.emailOrPhone && args.emailOrPhone !== patient.emailOrPhone) {
+      const existingPatient = await ctx.db
+        .query('patients')
+        .withIndex('by_contact', (q) => q.eq('emailOrPhone', args.emailOrPhone))
+        .first()
+
+      if (existingPatient && existingPatient._id !== args.patientId) {
+        throw new Error('A patient with this email/phone already exists')
+      }
+    }
+
+    // Update patient data
+    const updateData: any = {}
+    if (args.displayName !== undefined) updateData.displayName = args.displayName
+    if (args.emailOrPhone !== undefined) updateData.emailOrPhone = args.emailOrPhone
+
+    await ctx.db.patch(args.patientId, updateData)
+
+    // Emit journal event for patient update
+    await ctx.db.insert('journal_events', {
+      encounterId: null,
+      type: JOURNAL_EVENT_TYPES.NOTE_ADDED,
+      payload: {
+        message: 'Patient record updated',
+        patientId: args.patientId,
+        displayName: args.displayName || patient.displayName,
+        emailOrPhone: args.emailOrPhone || patient.emailOrPhone,
+        updatedFields: Object.keys(updateData),
+      },
+      at: Date.now(),
+    })
+
+    return { success: true }
+  },
+})
+
 export const linkToEncounter = mutation({
   args: {
     patientId: v.id('patients'),
