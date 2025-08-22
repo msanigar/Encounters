@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useMutation } from 'convex/react'
+import { useState, useEffect } from 'react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +16,8 @@ import {
   Users,
   Calendar,
   Phone,
-  Mail
+  Mail,
+  ExternalLink
 } from 'lucide-react'
 
 export default function CheckInPage() {
@@ -28,8 +29,15 @@ export default function CheckInPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [checkInResult, setCheckInResult] = useState<any>(null)
+  const [visitId, setVisitId] = useState<string | null>(null)
 
   const checkIn = useMutation(api.mutations.queue.checkIn)
+  
+  // Monitor visit status if we have a visitId
+  const visit = useQuery(
+    api.queries.queue.getVisit,
+    visitId ? { visitId: visitId as any } : 'skip'
+  )
 
   const handleInputChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -71,6 +79,7 @@ export default function CheckInPage() {
       })
 
       setCheckInResult(result)
+      setVisitId(result.visitId)
     } catch (error) {
       console.error('Failed to check in:', error)
       alert('Failed to check in. Please try again.')
@@ -80,6 +89,9 @@ export default function CheckInPage() {
   }
 
   if (checkInResult) {
+    // Check if visit has been converted to an encounter
+    const isConverted = visit?.encounterId && visit?.status === 'in-progress'
+    
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -88,41 +100,76 @@ export default function CheckInPage() {
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
             <CardTitle className="text-2xl font-bold text-gray-900">
-              You&apos;re Checked In!
+              {isConverted ? 'Your Session is Ready!' : 'You&apos;re Checked In!'}
             </CardTitle>
             <p className="text-gray-600 mt-2">
-              Thank you for checking in
+              {isConverted 
+                ? 'The provider is ready to see you'
+                : 'Thank you for checking in'
+              }
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-lg space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-blue-800">Queue Position:</span>
-                <Badge variant="secondary" className="text-lg font-bold">
-                  #{checkInResult.queuePosition}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-blue-800">Estimated Wait:</span>
-                <span className="text-sm text-blue-700 flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {checkInResult.estimatedWaitTime} minutes
-                </span>
-              </div>
-            </div>
+            {!isConverted ? (
+              <>
+                <div className="p-4 bg-blue-50 rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-blue-800">Queue Position:</span>
+                    <Badge variant="secondary" className="text-lg font-bold">
+                      #{checkInResult.queuePosition}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-blue-800">Estimated Wait:</span>
+                    <span className="text-sm text-blue-700 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {checkInResult.estimatedWaitTime} minutes
+                    </span>
+                  </div>
+                </div>
 
-            <div className="p-4 bg-yellow-50 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                <strong>Please wait here.</strong> The provider will call you when it&apos;s your turn. 
-                You&apos;ll receive a link to join the video call.
-              </p>
-            </div>
+                <div className="p-4 bg-yellow-50 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Please wait here.</strong> The provider will call you when it&apos;s your turn. 
+                    You&apos;ll receive a link to join the video call.
+                  </p>
+                </div>
 
-            <div className="text-center">
-              <p className="text-xs text-gray-500">
-                Keep this page open to see updates on your wait time.
-              </p>
-            </div>
+                <div className="text-center">
+                  <p className="text-xs text-gray-500">
+                    Keep this page open to see updates on your wait time.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="p-4 bg-green-50 rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-green-800">Status:</span>
+                    <Badge variant="default" className="bg-green-600">
+                      Ready to Join
+                    </Badge>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm text-green-700">
+                      The provider has started your session. Click the button below to join the video call.
+                    </p>
+                  </div>
+                </div>
+
+                <Button 
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  onClick={() => {
+                    if (visit?.encounterId && visit?.participantId) {
+                      window.location.href = `/patient/${visit.encounterId}/${visit.participantId}`
+                    }
+                  }}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Join Video Call
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

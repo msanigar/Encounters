@@ -2,9 +2,26 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useConvex } from 'convex/react'
+import { useMutation } from 'convex/react'
+import { api } from '@/convex/_generated/api'
 import { livekitClient } from '@/lib/livekitClient'
 import { ConnectionState, RemoteParticipant, RemoteTrack, RemoteTrackPublication } from 'livekit-client'
 import { useDeviceStore } from '@/stores/devices'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { 
+  Phone, 
+  PhoneOff, 
+  Video, 
+  VideoOff, 
+  Mic, 
+  MicOff,
+  Users,
+  Signal,
+  Wifi,
+  WifiOff
+} from 'lucide-react'
 
 interface PatientMediaCanvasProps {
   encounterId: string
@@ -66,6 +83,27 @@ export function PatientMediaCanvas({
 
   const convex = useConvex()
   const { selectedMicId, selectedCamId } = useDeviceStore()
+  const patientJoin = useMutation(api.mutations.patients.join)
+  const patientLeave = useMutation(api.mutations.patients.leave)
+  const patientHeartbeat = useMutation(api.mutations.patients.heartbeat)
+
+  // Set up heartbeat interval when connected
+  useEffect(() => {
+    if (!isConnected || !encounterId || !participantId) return
+
+    const heartbeatInterval = setInterval(async () => {
+      try {
+        await patientHeartbeat({
+          encounterId: encounterId as any,
+          participantId,
+        })
+      } catch (error) {
+        console.error('Failed to send heartbeat:', error)
+      }
+    }, 30000) // Send heartbeat every 30 seconds
+
+    return () => clearInterval(heartbeatInterval)
+  }, [isConnected, encounterId, participantId, patientHeartbeat])
 
   const handleJoinCall = useCallback(async () => {
     if (!livekitRoom || !encounterId || !participantId || hasJoined.current) return
@@ -74,6 +112,13 @@ export function PatientMediaCanvas({
     livekitClient.setClient(convex)
 
     try {
+      // Update patient presence to online
+      await patientJoin({
+        encounterId: encounterId as any,
+        participantId,
+        displayName,
+      })
+
       const storedToken = localStorage.getItem(`livekit_token_${participantId}`)
       if (!storedToken) {
         throw new Error('No LiveKit token found. Please check in again.')
@@ -236,19 +281,35 @@ export function PatientMediaCanvas({
     }
   }, [livekitRoom, handleJoinCall, isJoining]) // Only depend on livekitRoom, not the entire handleJoinCall function
 
-  const handleLeaveCall = async () => {
+  const handleLeaveCall = useCallback(async () => {
+    if (!encounterId || !participantId) return
+
     try {
-      livekitClient.disconnect()
+      // Update patient presence to offline
+      await patientLeave({
+        encounterId: encounterId as any,
+        participantId,
+      })
+
+      // Disconnect from LiveKit
+      await livekitClient.disconnect()
+      
+      hasJoined.current = false
       setIsConnected(false)
+      setIsJoining(false)
+      setIsPublishing(false)
       setLocalVideo(null)
       setRemoteVideo(null)
-      setIsPublishing(false)
-      hasJoined.current = false
+      setParticipants([])
+      setPublishedTracks([])
+      setSubscribedTracks([])
+      setRemoteTracks({})
+      
       onLeaveCall?.()
     } catch (error) {
-      // Silent fail
+      console.error('Failed to leave call:', error)
     }
-  }
+  }, [encounterId, participantId, patientLeave, onLeaveCall])
 
   return (
     <div className="flex-1 flex flex-col bg-gray-900 relative">

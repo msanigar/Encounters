@@ -50,17 +50,23 @@ export function QueueManagement({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Queue Stats */}
+      {/* Combined Queue Management */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Walk-in Queue
+          <CardTitle className="text-lg flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Walk-in Queue
+            </span>
+            <Badge variant="secondary">
+              {queue?.length || 0} waiting
+            </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+          {/* Queue Stats */}
           {queueStats ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">{queueStats.waiting}</div>
                 <div className="text-sm text-gray-600">Waiting</div>
@@ -82,7 +88,7 @@ export function QueueManagement({
             </div>
           ) : (
             <div className="animate-pulse">
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="text-center">
                     <div className="h-8 bg-gray-200 rounded mb-2"></div>
@@ -92,99 +98,90 @@ export function QueueManagement({
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
 
-      {/* Queue List */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Current Queue
-            </span>
-            <Badge variant="secondary">
-              {queue?.length || 0} waiting
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!queue ? (
-            <div className="space-y-3">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="h-20 bg-gray-200 rounded-lg"></div>
-                </div>
-              ))}
-            </div>
-          ) : queue.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p className="text-sm">No patients in queue</p>
-              <p className="text-xs">Walk-in patients will appear here</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {queue.map((visit: any) => (
-                <div
-                  key={visit._id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Badge variant="outline" className="text-xs">
-                        #{visit.queuePosition}
-                      </Badge>
-                      <h4 className="font-medium text-gray-900">{visit.displayName}</h4>
-                      {visit.contactInfo && (
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                          {visit.contactInfo.includes('@') ? (
-                            <Mail className="w-3 h-3" />
-                          ) : (
-                            <Phone className="w-3 h-3" />
-                          )}
-                          <span>{visit.contactInfo}</span>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">{visit.reasonForVisit}</p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        <span>Checked in {formatTime(visit.checkedInAt)}</span>
+          {/* Queue List */}
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Current Patients
+            </h4>
+            {!queue ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-20 bg-gray-200 rounded-lg"></div>
+                  </div>
+                ))}
+              </div>
+            ) : queue.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-sm">No patients in queue</p>
+                <p className="text-xs">Walk-in patients will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {queue.map((visit: any) => (
+                  <div
+                    key={visit._id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Badge variant="outline" className="text-xs">
+                          #{visit.queuePosition}
+                        </Badge>
+                        <h4 className="font-medium text-gray-900">{visit.displayName}</h4>
+                        {visit.contactInfo && (
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            {visit.contactInfo.includes('@') ? (
+                              <Mail className="w-3 h-3" />
+                            ) : (
+                              <Phone className="w-3 h-3" />
+                            )}
+                            <span>{visit.contactInfo}</span>
+                          </div>
+                        )}
                       </div>
-                      {visit.estimatedWaitTime && (
+                      <p className="text-sm text-gray-600 mb-2">{visit.reasonForVisit}</p>
+                      <div className="flex items-center gap-4 text-xs text-gray-500">
                         <div className="flex items-center gap-1">
-                          <span>Est. {visit.estimatedWaitTime}m wait</span>
+                          <Clock className="w-3 h-3" />
+                          <span>Checked in {formatTime(visit.checkedInAt)}</span>
                         </div>
-                      )}
+                        {visit.estimatedWaitTime && (
+                          <div className="flex items-center gap-1">
+                            <span>Est. {visit.estimatedWaitTime}m wait</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => handleStartEncounter(visit._id)}
+                        disabled={isConverting === visit._id}
+                        className="flex items-center gap-2"
+                      >
+                        {isConverting === visit._id ? (
+                          <>
+                            <Clock className="w-4 h-4 animate-spin" />
+                            Starting...
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="w-4 h-4" />
+                            Start Encounter
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => handleStartEncounter(visit._id)}
-                      disabled={isConverting === visit._id}
-                      className="flex items-center gap-2"
-                    >
-                      {isConverting === visit._id ? (
-                        <>
-                          <Clock className="w-4 h-4 animate-spin" />
-                          Starting...
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="w-4 h-4" />
-                          Start Encounter
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

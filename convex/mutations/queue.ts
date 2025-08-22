@@ -110,23 +110,37 @@ export const convertToEncounter = mutation({
     // Create permissions
     await ctx.db.insert('permissions', {
       encounterId,
-      canJoin: [visit.providerId],
+      canJoin: [visit.providerId, 'patient'],
       canPublish: [visit.providerId],
       canEnd: [visit.providerId],
     })
 
-    // Auto-assign intake form
-    await ctx.db.insert('form_assignments', {
+    // Create participant record for the patient
+    const participantId = `patient_${Date.now()}`
+    await ctx.db.insert('participants', {
       encounterId,
-      formId: 'intake',
-      assignedAt: Date.now(),
-      status: 'incomplete',
+      role: 'patient',
+      displayName: visit.displayName,
+      presence: 'offline', // Will be updated when they join
+      lastSeen: Date.now(),
+    })
+
+    // Create invite for the patient to join
+    const { generateOIT } = await import('../lib/utils')
+    const oit = generateOIT()
+    await ctx.db.insert('invites', {
+      encounterId,
+      channel: 'link',
+      target: 'walk-in-patient',
+      oit,
+      redeemedAt: null,
     })
 
     // Update visit status and link to encounter
     await ctx.db.patch(args.visitId, {
       status: 'in-progress',
       encounterId,
+      participantId, // Store the participant ID for patient access
     })
 
     // Log encounter creation
@@ -137,6 +151,8 @@ export const convertToEncounter = mutation({
         message: `Walk-in encounter created from queue for ${visit.displayName}`,
         reasonForVisit: visit.reasonForVisit,
         queuePosition: visit.queuePosition,
+        participantId,
+        oit,
       },
       at: Date.now(),
     })
@@ -145,6 +161,9 @@ export const convertToEncounter = mutation({
       encounterId,
       livekitRoom,
       patientId,
+      participantId,
+      oit,
+      inviteUrl: `/patient/${encounterId}/${participantId}`,
     }
   },
 })

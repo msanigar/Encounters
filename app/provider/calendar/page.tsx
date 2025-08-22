@@ -41,7 +41,6 @@ export default function CalendarPage() {
       <div className="max-w-7xl mx-auto p-4">
         <CalendarView 
           providerId={providerId}
-          onEncounterSelect={handleEncounterSelect}
         />
       </div>
     </div>

@@ -10,27 +10,22 @@ import { MediaControls } from '@/components/MediaControls/MediaControls'
 import { PatientSelector } from '@/components/PatientSelector/PatientSelector'
 import { ScheduleEncounter } from '@/components/ScheduleEncounter/ScheduleEncounter'
 import { QueueManagement } from '@/components/QueueManagement/QueueManagement'
+import { LogoutButton } from '@/components/LogoutButton'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, RefreshCw } from 'lucide-react'
-import Link from 'next/link'
-import { Calendar, User, FileText, Settings } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { livekitClient } from '@/lib/livekitClient'
 
 export default function ProviderDashboard() {
   const [activeEncounterId, setActiveEncounterId] = useState<string | null>(null)
   const [isInMedia, setIsInMedia] = useState(false)
   const [providerId, setProviderId] = useState<string | null>(null)
-  const [debugData, setDebugData] = useState<any>(null)
-  const [isResetting, setIsResetting] = useState(false)
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
   const [selectedPatient, setSelectedPatient] = useState<any>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
   
-  const resetOits = useMutation(api.mutations.resetOits.resetOits)
-
   const activeEncounter = useQuery(api.queries.encounters.getWithDetails, 
     activeEncounterId ? { encounterId: activeEncounterId as any } : 'skip'
   )
@@ -108,33 +103,13 @@ export default function ProviderDashboard() {
     setSelectedPatient(patient)
   }
 
-  const handleResetOits = async () => {
-    if (isResetting) return
-    
-    setIsResetting(true)
-    try {
-      const result = await resetOits()
-      console.log('✅ OITs reset successfully:', result)
-      
-      // Refresh the page to show new encounters
-      window.location.reload()
-    } catch (error) {
-      console.error('❌ Failed to reset OITs:', error)
-      alert('Failed to reset OITs. Please try again.')
-    } finally {
-      setIsResetting(false)
-    }
-  }
-
   if (!providerId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Sign in required</h2>
           <p className="text-gray-600 mb-4">Please sign in to access your provider dashboard.</p>
-          <Link href="/provider/login">
-            <Button>Go to Sign In</Button>
-          </Link>
+          <Button onClick={() => router.push('/provider/login')}>Go to Sign In</Button>
         </div>
       </div>
     )
@@ -156,6 +131,7 @@ export default function ProviderDashboard() {
               </div>
             </div>
           </div>
+          <LogoutButton />
         </div>
       </div>
 
@@ -166,7 +142,6 @@ export default function ProviderDashboard() {
           providerId={providerId}
           onEncounterSelect={handleEncounterSelect}
           activeEncounterId={activeEncounterId || undefined}
-          debugData={debugData}
         />
 
         {/* Center Stage - Dynamic Content */}
@@ -195,7 +170,6 @@ export default function ProviderDashboard() {
                   isProvider={true}
                   onJoinMedia={handleJoinMedia}
                   onLeaveMedia={handleLeaveMedia}
-                  onDebugUpdate={setDebugData}
                 />
               ) : (
                 <WorkflowMode 
@@ -223,13 +197,15 @@ export default function ProviderDashboard() {
                       selectedPatientId={selectedPatientId}
                     />
 
-                    {/* Schedule Encounter */}
-                    <ScheduleEncounter
-                      selectedPatientId={selectedPatientId}
-                      selectedPatient={selectedPatient}
-                      providerId={providerId || 'provider-demo-001'}
-                      providerRoom="demo-room"
-                    />
+                    {/* Schedule Encounter - Only show when patient is selected */}
+                    {selectedPatientId && selectedPatient && (
+                      <ScheduleEncounter
+                        selectedPatientId={selectedPatientId}
+                        selectedPatient={selectedPatient}
+                        providerId={providerId || 'provider-demo-001'}
+                        providerRoom="demo-room"
+                      />
+                    )}
 
                     {/* Queue Management */}
                     <QueueManagement
@@ -240,32 +216,6 @@ export default function ProviderDashboard() {
                         updateUrl(encounterId, false)
                       }}
                     />
-
-                    {/* Quick Actions */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                      <div className="space-y-3">
-                        <Link href="/provider/calendar">
-                          <Button className="w-full justify-start" variant="outline">
-                            <Calendar className="w-4 h-4 mr-2" />
-                            View Calendar
-                          </Button>
-                        </Link>
-                        <Button className="w-full justify-start" variant="outline">
-                          <FileText className="w-4 h-4 mr-2" />
-                          Review Past Encounters
-                        </Button>
-                        <Button 
-                          className="w-full justify-start" 
-                          variant="outline"
-                          onClick={handleResetOits}
-                          disabled={isResetting}
-                        >
-                          <RefreshCw className={`w-4 h-4 mr-2 ${isResetting ? 'animate-spin' : ''}`} />
-                          {isResetting ? 'Resetting...' : 'Reset OITs'}
-                        </Button>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>

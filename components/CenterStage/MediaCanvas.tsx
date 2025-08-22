@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useConvex } from 'convex/react'
-import { useAction } from 'convex/react'
+import { useAction, useMutation } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { livekitClient } from '@/lib/livekitClient'
 import { ConnectionState, RemoteParticipant, RemoteTrack, RemoteTrackPublication } from 'livekit-client'
@@ -67,6 +67,27 @@ export function MediaCanvas({
   const convex = useConvex()
   const generateToken = useAction(api.actions.livekit.generateToken)
   const { selectedMicId, selectedCamId } = useDeviceStore()
+  const providerJoin = useMutation(api.mutations.provider.join)
+  const providerLeave = useMutation(api.mutations.provider.leave)
+  const providerHeartbeat = useMutation(api.mutations.provider.heartbeat)
+
+  // Set up heartbeat interval when connected
+  useEffect(() => {
+    if (!isConnected || !encounterId) return
+
+    const heartbeatInterval = setInterval(async () => {
+      try {
+        await providerHeartbeat({
+          encounterId: encounterId as any,
+          providerId: 'provider-demo-001',
+        })
+      } catch (error) {
+        console.error('Failed to send heartbeat:', error)
+      }
+    }, 30000) // Send heartbeat every 30 seconds
+
+    return () => clearInterval(heartbeatInterval)
+  }, [isConnected, encounterId, providerHeartbeat])
 
   // Set up Convex client for LiveKit
   useEffect(() => {
@@ -79,6 +100,12 @@ export function MediaCanvas({
     try {
       setIsJoining(true)
       hasJoined.current = true
+
+      // Update provider presence to online
+      await providerJoin({
+        encounterId: encounterId as any,
+        providerId: 'provider-demo-001',
+      })
 
       const tokenResult = await generateToken({
         roomName: livekitRoom,
@@ -221,18 +248,34 @@ export function MediaCanvas({
     }
   }, [livekitRoom]) // Only depend on livekitRoom, not the entire handleJoinMedia function
 
-  const handleLeaveMedia = async () => {
+  const handleLeaveMedia = useCallback(async () => {
+    if (!encounterId) return
+
     try {
-      livekitClient.disconnect()
-      setIsConnected(false)
-      setRemoteVideo(null)
-      setIsPublishing(false)
+      // Update provider presence to offline
+      await providerLeave({
+        encounterId: encounterId as any,
+        providerId: 'provider-demo-001',
+      })
+
+      // Disconnect from LiveKit
+      await livekitClient.disconnect()
+      
       hasJoined.current = false
+      setIsConnected(false)
+      setIsJoining(false)
+      setIsPublishing(false)
+      setLocalVideo(null)
+      setRemoteVideo(null)
+      setParticipants([])
+      setPublishedTracks([])
+      setSubscribedTracks([])
+      
       onLeaveMedia?.()
     } catch (error) {
-      // Silent fail
+      console.error('Failed to leave media:', error)
     }
-  }
+  }, [encounterId, providerLeave, onLeaveMedia])
 
   return (
     <div className="flex-1 flex flex-col bg-gray-900 relative">

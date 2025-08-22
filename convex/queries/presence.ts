@@ -9,11 +9,20 @@ export const summary = query({
       .withIndex('by_encounter', (q) => q.eq('encounterId', args.encounterId))
       .collect()
 
-    const onlineCount = participants.filter(p => p.presence === 'online').length
+    const now = Date.now()
+    const timeoutMs = 2 * 60 * 1000 // 2 minutes timeout
+
+    // Filter out participants who haven't been seen recently
+    const activeParticipants = participants.filter(p => {
+      if (p.presence === 'offline') return false
+      return (now - p.lastSeen) < timeoutMs
+    })
+
+    const onlineCount = activeParticipants.filter(p => p.presence === 'online').length
     const totalCount = participants.length
 
-    const provider = participants.find(p => p.role === 'provider')
-    const patients = participants.filter(p => p.role === 'patient')
+    const provider = activeParticipants.find(p => p.role === 'provider')
+    const patients = activeParticipants.filter(p => p.role === 'patient')
 
     return {
       onlineCount,

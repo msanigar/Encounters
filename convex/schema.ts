@@ -156,10 +156,43 @@ export default defineSchema({
     checkedInAt: v.number(),
     estimatedWaitTime: v.optional(v.number()), // minutes
     encounterId: v.optional(v.id('encounters')), // Set when converted to encounter
+    participantId: v.optional(v.string()), // Set when converted to encounter
   })
     .index('by_provider', ['providerId'])
     .index('by_room', ['providerRoom'])
     .index('by_status', ['status'])
     .index('by_queue', ['queuePosition'])
     .index('by_checkin', ['checkedInAt']),
+
+  notes: defineTable({
+    encounterId: v.id('encounters'),
+    patientId: v.optional(v.id('patients')),
+    providerId: v.string(),
+    content: v.string(),
+    type: v.union(
+      v.literal('general'),
+      v.literal('assessment'),
+      v.literal('treatment'),
+      v.literal('followup')
+    ),
+    createdAt: v.number(),
+  })
+    .index('by_encounter', ['encounterId'])
+    .index('by_patient', ['patientId'])
+    .index('by_provider', ['providerId'])
+    .index('by_created', ['createdAt']),
+
+  provider_sessions: defineTable({
+    providerId: v.string(),
+    providerName: v.string(),
+    providerRoom: v.string(),
+    email: v.string(),
+    lastLoginAt: v.number(),
+    isActive: v.boolean(),
+    loggedOutAt: v.optional(v.number()),
+    expiredAt: v.optional(v.number()),
+  })
+    .index('by_provider', ['providerId'])
+    .index('by_active', ['isActive'])
+    .index('by_email', ['email']),
 })

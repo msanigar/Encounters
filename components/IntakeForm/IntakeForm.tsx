@@ -68,7 +68,7 @@ export function IntakeForm({
     try {
       await submitForm({
         encounterId: encounterId as any,
-        patientId: patientId as any,
+        patientId: patientId ? (patientId as any) : undefined,
         formId: 'intake',
         answers: result.data,
       })

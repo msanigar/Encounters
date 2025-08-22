@@ -115,3 +115,26 @@ export const leave = mutation({
     return { success: true }
   },
 })
+
+export const heartbeat = mutation({
+  args: {
+    encounterId: v.id('encounters'),
+    providerId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Update provider's lastSeen timestamp
+    const participant = await ctx.db
+      .query('participants')
+      .withIndex('by_encounter', (q) => q.eq('encounterId', args.encounterId))
+      .filter((q) => q.eq(q.field('role'), 'provider'))
+      .first()
+
+    if (participant) {
+      await ctx.db.patch(participant._id, {
+        lastSeen: Date.now(),
+      })
+    }
+
+    return { success: true }
+  },
+})

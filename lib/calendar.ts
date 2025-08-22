@@ -76,3 +76,11 @@ export const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
 ]
+
+export function getStartOfMonth(year: number, month: number): Date {
+  return new Date(year, month, 1)
+}
+
+export function getMonthName(month: number): string {
+  return MONTHS[month]
+}

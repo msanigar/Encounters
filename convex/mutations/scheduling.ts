@@ -98,13 +98,7 @@ export const createEncounterWithInvite = mutation({
       canEnd: [args.providerId],
     })
 
-    // Auto-assign intake form
-    await ctx.db.insert('form_assignments', {
-      encounterId,
-      formId: 'intake',
-      assignedAt: Date.now(),
-      status: 'incomplete',
-    })
+    // Note: Forms are now manually assigned by providers, not auto-assigned
 
     // Emit journal events
     await ctx.db.insert('journal_events', {
@@ -166,5 +160,145 @@ export const createEncounterWithInvite = mutation({
       inviteUrl,
       patient,
     }
+  },
+})
+
+export const rescheduleEncounter = mutation({
+  args: {
+    encounterId: v.id('encounters'),
+    newScheduledAt: v.number(),
+  },
+  handler: async (ctx, args) => {
+    // Update the encounter's scheduled time
+    await ctx.db.patch(args.encounterId, {
+      scheduledAt: args.newScheduledAt,
+    })
+
+    // Log the rescheduling to journal
+    await ctx.db.insert('journal_events', {
+      encounterId: args.encounterId,
+      type: 'ENCOUNTER_RESCHEDULED',
+      payload: {
+        newScheduledAt: args.newScheduledAt,
+        rescheduledAt: Date.now(),
+      },
+      at: Date.now(),
+    })
+
+    return args.encounterId
+  },
+})
+
+export const deleteEncounter = mutation({
+  args: {
+    encounterId: v.id('encounters'),
+  },
+  handler: async (ctx, args) => {
+    // Get the encounter to check if it can be deleted
+    const encounter = await ctx.db.get(args.encounterId)
+    if (!encounter) {
+      throw new Error('Encounter not found')
+    }
+
+    // Only allow deletion of scheduled encounters (not active ones)
+    if (encounter.status === 'active') {
+      throw new Error('Cannot delete an active encounter')
+    }
+
+    // Delete related records
+    // Delete invites
+    const invites = await ctx.db
+      .query('invites')
+      .withIndex('by_encounter', (q) => q.eq('encounterId', args.encounterId))
+      .collect()
+    
+    for (const invite of invites) {
+      await ctx.db.delete(invite._id)
+    }
+
+    // Delete rooms
+    const rooms = await ctx.db
+      .query('rooms')
+      .withIndex('by_encounter', (q) => q.eq('encounterId', args.encounterId))
+      .collect()
+    
+    for (const room of rooms) {
+      await ctx.db.delete(room._id)
+    }
+
+    // Delete permissions
+    const permissions = await ctx.db
+      .query('permissions')
+      .withIndex('by_encounter', (q) => q.eq('encounterId', args.encounterId))
+      .collect()
+    
+    for (const permission of permissions) {
+      await ctx.db.delete(permission._id)
+    }
+
+    // Delete patient links
+    const patientLinks = await ctx.db
+      .query('patient_links')
+      .withIndex('by_encounter', (q) => q.eq('encounterId', args.encounterId))
+      .collect()
+    
+    for (const link of patientLinks) {
+      await ctx.db.delete(link._id)
+    }
+
+    // Delete form assignments
+    const formAssignments = await ctx.db
+      .query('form_assignments')
+      .withIndex('by_encounter', (q) => q.eq('encounterId', args.encounterId))
+      .collect()
+    
+    for (const assignment of formAssignments) {
+      await ctx.db.delete(assignment._id)
+    }
+
+    // Delete participants
+    const participants = await ctx.db
+      .query('participants')
+      .withIndex('by_encounter', (q) => q.eq('encounterId', args.encounterId))
+      .collect()
+    
+    for (const participant of participants) {
+      await ctx.db.delete(participant._id)
+    }
+
+    // Delete journal events
+    const journalEvents = await ctx.db
+      .query('journal_events')
+      .withIndex('by_encounter', (q) => q.eq('encounterId', args.encounterId))
+      .collect()
+    
+    for (const event of journalEvents) {
+      await ctx.db.delete(event._id)
+    }
+
+    // Delete workflows
+    const workflows = await ctx.db
+      .query('workflows')
+      .withIndex('by_encounter', (q) => q.eq('encounterId', args.encounterId))
+      .collect()
+    
+    for (const workflow of workflows) {
+      await ctx.db.delete(workflow._id)
+    }
+
+    // Delete notes
+    const notes = await ctx.db
+      .query('notes')
+      .withIndex('by_encounter', (q) => q.eq('encounterId', args.encounterId))
+      .collect()
+    
+    for (const note of notes) {
+      await ctx.db.delete(note._id)
+    }
+
+    // Finally, delete the encounter itself
+    await ctx.db.delete(args.encounterId)
+
+    return { success: true }
   },
 })

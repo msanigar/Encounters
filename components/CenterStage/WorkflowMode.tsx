@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Toast, useToast } from '@/components/ui/toast'
 import { formatTime } from '@/lib/utils'
 import { FileText, CheckCircle, Clock, User, Link, Copy } from 'lucide-react'
+import { NotesPanel } from '@/components/NotesPanel/NotesPanel'
 
 interface WorkflowModeProps {
   encounterId: string
@@ -28,10 +29,8 @@ export function WorkflowMode({ encounterId, onJoinCall }: WorkflowModeProps) {
     }
   }
 
-  const sampleForms = [
+  const availableForms = [
     { id: 'intake', title: 'Patient Intake Form', description: 'Basic patient information and medical history' },
-    { id: 'symptoms', title: 'Symptom Assessment', description: 'Current symptoms and severity' },
-    { id: 'medications', title: 'Medication Review', description: 'Current medications and allergies' },
   ]
 
   return (
@@ -147,7 +146,7 @@ export function WorkflowMode({ encounterId, onJoinCall }: WorkflowModeProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {sampleForms.map((form) => (
+              {availableForms.map((form: any) => (
                 <div
                   key={form.id}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
@@ -213,11 +212,14 @@ export function WorkflowMode({ encounterId, onJoinCall }: WorkflowModeProps) {
               Join Call
             </Button>
           ) : null}
-          <Button size="lg" variant="outline">
-            <FileText className="w-4 h-4 mr-2" />
-            View Notes
-          </Button>
         </div>
+
+        {/* Notes Panel */}
+        <NotesPanel
+          encounterId={encounterId}
+          patientId={undefined} // Will be fetched from patient_links table
+          providerId="provider-demo-001"
+        />
       </div>
 
       {/* Toast Notification */}

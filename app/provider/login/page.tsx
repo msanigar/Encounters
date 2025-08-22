@@ -2,28 +2,45 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useMutation } from 'convex/react'
+import { api } from '@/convex/_generated/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { PROVIDER_CREDENTIALS } from '@/convex/lib/constants'
 
 export default function ProviderLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  
+  const authenticateProvider = useMutation(api.mutations.auth.authenticateProvider)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
+    setError('')
     
-    if (email === PROVIDER_CREDENTIALS.email && password === PROVIDER_CREDENTIALS.password) {
-      // Set provider session (in real app, this would be a proper session)
-      localStorage.setItem('providerId', PROVIDER_CREDENTIALS.id)
-      localStorage.setItem('providerName', PROVIDER_CREDENTIALS.name)
-      localStorage.setItem('providerRoom', PROVIDER_CREDENTIALS.room)
-      router.push('/provider/dashboard')
-    } else {
-      setError('Invalid credentials. Use provider@demo.test / demo123')
+    try {
+      const result = await authenticateProvider({ email, password })
+      
+      if (result.success) {
+        // Store session information
+        localStorage.setItem('sessionId', result.sessionId)
+        localStorage.setItem('providerId', result.provider.id)
+        localStorage.setItem('providerName', result.provider.name)
+        localStorage.setItem('providerRoom', result.provider.room)
+        localStorage.setItem('providerEmail', result.provider.email)
+        router.push('/provider/dashboard')
+      } else {
+        setError(result.error || 'Invalid credentials. Use provider@demo.test / demo123')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      setError('Login failed. Please try again.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -74,8 +91,8 @@ export default function ProviderLogin() {
               </div>
             )}
 
-            <Button type="submit" className="w-full">
-              Sign In
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
 
