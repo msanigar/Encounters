@@ -13,7 +13,7 @@ async function quickCleanup() {
     
     // Clean up old queue entries
     const queueResult = await client.mutation(api.mutations.queue.cleanupOldQueueEntries, {
-      olderThanMinutes: 30 // 30 minutes
+      olderThanMinutes: 5 // 5 minutes - more aggressive cleanup for immediate departures
     });
     console.log(`✅ Cleaned ${queueResult.cleanedCount} old queue entries`);
     

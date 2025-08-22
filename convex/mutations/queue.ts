@@ -194,6 +194,7 @@ export const cleanupOldQueueEntries = mutation({
   handler: async (ctx, args) => {
     const now = Date.now()
     const threshold = (args.olderThanMinutes || 30) * 60 * 1000 // Default 30 minutes
+    const presenceThreshold = 5 * 60 * 1000 // 5 minutes for presence timeout
     
     console.log(`🧹 Cleaning up queue entries older than ${args.olderThanMinutes || 30} minutes...`)
     
@@ -209,8 +210,32 @@ export const cleanupOldQueueEntries = mutation({
       const age = now - visit.checkedInAt
       const ageMinutes = Math.round(age / (60 * 1000))
       
+      // Check if this visit should be cleaned up
+      let shouldCleanup = false
+      let cleanupReason = ''
+      
+      // 1. Clean up old visits (default behavior)
       if (age > threshold) {
-        console.log(`🧹 Cleaning up old visit: ${visit.displayName} (${ageMinutes}m old, status: ${visit.status})`)
+        shouldCleanup = true
+        cleanupReason = `old (${ageMinutes}m)`
+      }
+      // 2. Clean up visits that have been converted to encounters but are stale
+      else if (visit.encounterId && visit.status === 'in-progress') {
+        // Check if the encounter is stale
+        const encounter = await ctx.db.get(visit.encounterId)
+        if (encounter && encounter.status === 'ended') {
+          shouldCleanup = true
+          cleanupReason = 'encounter ended'
+        }
+      }
+      // 3. Clean up waiting visits that are older than presence timeout (5 minutes)
+      else if (visit.status === 'waiting' && age > presenceThreshold) {
+        shouldCleanup = true
+        cleanupReason = `stale presence (${ageMinutes}m)`
+      }
+      
+      if (shouldCleanup) {
+        console.log(`🧹 Cleaning up visit: ${visit.displayName} (${cleanupReason}, status: ${visit.status})`)
         
         // Mark as completed to remove from queue
         await ctx.db.patch(visit._id, {

@@ -16,7 +16,7 @@ interface CalendarViewProps {
 
 export function CalendarView({ providerId }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month')
+  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('week')
   const [selectedEncounter, setSelectedEncounter] = useState<any>(null)
   const [isRescheduling, setIsRescheduling] = useState(false)
   const [newDateTime, setNewDateTime] = useState('')

@@ -27,21 +27,55 @@ export const summary = query({
     // Get encounter status to determine check-in state
     const encounter = await ctx.db.get(args.encounterId)
     
-    // Determine check-in state
-    let checkInState: 'not-arrived' | 'arrived' | 'in-call' | 'workflow' = 'not-arrived'
+    // Get recent media events to determine if someone is actively in a call
+    const recentMediaEvents = await ctx.db
+      .query('journal_events')
+      .withIndex('by_encounter', (q) => q.eq('encounterId', args.encounterId))
+      .filter((q) => 
+        q.or(
+          q.eq(q.field('type'), 'MEDIA_STARTED'),
+          q.eq(q.field('type'), 'MEDIA_STOPPED')
+        )
+      )
+      .order('desc')
+      .take(10) // Get last 10 media events
+
+    // Determine if there's an active call by checking for recent MEDIA_STARTED without a following MEDIA_STOPPED
+    let hasActiveCall = false
+    let lastMediaStarted = 0
+    let lastMediaStopped = 0
+
+    for (const event of recentMediaEvents) {
+      if (event.type === 'MEDIA_STARTED') {
+        lastMediaStarted = Math.max(lastMediaStarted, event.at)
+      } else if (event.type === 'MEDIA_STOPPED') {
+        lastMediaStopped = Math.max(lastMediaStopped, event.at)
+      }
+    }
+
+    // If the last media event was MEDIA_STARTED and it's more recent than MEDIA_STOPPED, there's an active call
+    hasActiveCall = lastMediaStarted > lastMediaStopped
+
+    // Determine check-in state with enhanced logic
+    let checkInState: 'not-arrived' | 'arrived' | 'in-call' | 'dashboard' = 'not-arrived'
     
     if (encounter) {
       if (encounter.status === 'active') {
-        // Check if both provider and patient are online
         const hasPatientOnline = patients.some(p => p.presence === 'online')
         const hasProviderOnline = !!provider && provider.presence === 'online'
         
-        if (hasPatientOnline && hasProviderOnline) {
+        if (hasActiveCall && hasPatientOnline) {
+          // Patient is in an active call
           checkInState = 'in-call'
         } else if (hasPatientOnline && !hasProviderOnline) {
+          // Patient is online but provider hasn't joined yet
           checkInState = 'arrived'
-        } else {
-          checkInState = 'workflow'
+        } else if (hasPatientOnline && hasProviderOnline && !hasActiveCall) {
+          // Both are online but not in an active call (probably on dashboard)
+          checkInState = 'dashboard'
+        } else if (hasPatientOnline) {
+          // Patient is online but no clear call state
+          checkInState = 'dashboard'
         }
       } else if (encounter.status === 'scheduled') {
         const hasPatientOnline = patients.some(p => p.presence === 'online')
@@ -61,6 +95,9 @@ export const summary = query({
       hasPatientOnline: patients.some(p => p.presence === 'online'),
       checkInState,
       encounterStatus: encounter?.status || 'unknown',
+      hasActiveCall,
+      lastMediaStarted,
+      lastMediaStopped,
     }
   },
 })

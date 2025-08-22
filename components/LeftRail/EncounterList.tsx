@@ -84,8 +84,8 @@ export function EncounterList({ providerId, onEncounterSelect, activeEncounterId
                     case 'in-call':
                       showToast(`Patient joined the call`)
                       break
-                    case 'workflow':
-                      showToast(`Encounter moved to workflow mode`)
+                    case 'dashboard':
+                      showToast(`Patient is on dashboard`)
                       break
                   }
                 }
@@ -112,11 +112,11 @@ export function EncounterList({ providerId, onEncounterSelect, activeEncounterId
                         In Call
                       </Badge>
                     )
-                  case 'workflow':
+                  case 'dashboard':
                     return (
                       <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
                         <div className="w-2 h-2 bg-blue-500 rounded-full mr-1" />
-                        Workflow
+                        Dashboard
                       </Badge>
                     )
                   default:
